@@ -61,5 +61,3 @@ const (
 	// 逻辑运算词
 	LexemeLogicOperator
 )
-
-type Graph struct{}
