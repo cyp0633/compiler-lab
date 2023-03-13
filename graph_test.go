@@ -9,3 +9,7 @@ func TestGenerateBasicNFA(t *testing.T) {
 func TestUnionNFA(t *testing.T) {
 	_ = unionNFA(&Graph{}, &Graph{})
 }
+
+func TestProductNFA(t *testing.T) {
+	_ = productNFA(&Graph{}, &Graph{})
+}

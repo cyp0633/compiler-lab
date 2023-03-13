@@ -162,7 +162,7 @@ func unionNFAPreprocess(g *Graph) {
 	}
 }
 
-// 拷贝 NFA
+// （深）拷贝 NFA
 //
 // 防止编辑同一个指针时修改了原来的 NFA
 func copyNFA(g *Graph) (gCopy *Graph) {
@@ -176,5 +176,51 @@ func copyNFA(g *Graph) (gCopy *Graph) {
 		stateCopy := State{StateID: state.StateID, StateType: state.StateType, Category: state.Category}
 		gCopy.StateTable = append(gCopy.StateTable, &stateCopy)
 	}
+	return
+}
+
+// 连接运算
+func productNFA(g1, g2 *Graph) (g *Graph) {
+	// g1 的出边和 g2 的入边
+	hasInEdge, hasOutEdge := false, false
+	for _, edge := range g1.EdgeTable {
+		if edge.NextState == g1.NumOfStates-1 {
+			hasOutEdge = true
+		}
+	}
+	for _, edge := range g2.EdgeTable {
+		if edge.FromState == 0 {
+			hasInEdge = true
+		}
+	}
+	// 将 g1 的状态拷贝进来
+	g = copyNFA(g1)
+	// 如果 g1 的出边和 g2 的入边都存在，则再加一个状态
+	// 原最后一个状态用 epsilon 转换连接到新的状态
+	// 新的状态用 epsilon 转换连接到 g2 的第一个状态
+	if hasInEdge && hasOutEdge {
+		g.NumOfStates++
+		// 新建一个状态
+		state := State{StateID: g.NumOfStates - 1, StateType: StateUnmatch, Category: LexemeNull}
+		// 新建一个 epsilon 转换
+		edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 2, NextState: g.NumOfStates - 1}
+		g.EdgeTable = append(g.EdgeTable, &edge)
+		g.StateTable = append(g.StateTable, &state)
+	}
+	// 建立到 g2 第一个状态的转换
+	edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 1, NextState: g.NumOfStates}
+	g.EdgeTable = append(g.EdgeTable, &edge)
+	// 将 g2 的状态拷贝进来，并修改序号
+	g2Copy := copyNFA(g2)
+	for _, edge := range g2Copy.EdgeTable {
+		edge.FromState += g.NumOfStates - 1
+		edge.NextState += g.NumOfStates - 1
+	}
+	for _, state := range g2Copy.StateTable {
+		state.StateID += g.NumOfStates - 1
+	}
+	g.NumOfStates += g2Copy.NumOfStates - 1
+	g.EdgeTable = append(g.EdgeTable, g2Copy.EdgeTable...)
+	g.StateTable = append(g.StateTable, g2Copy.StateTable...)
 	return
 }
