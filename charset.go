@@ -99,18 +99,67 @@ func unionChars(c1 rune, c2 rune) (indexID int) {
 //
 // 将原有的字符集与新字符合并
 func unionCharsetAndChar(indexID int, c rune) (newIndexID int) {
-	var cs = CharsetTable[indexID]
-	switch {
-	// c 在 cs 中，直接拷贝
-	case c >= cs.FromChar && c <= cs.ToChar:
-	// c 在 cs 正前面，合并
-	case c == cs.FromChar-1:
-		cs.FromChar = c
-	// c 在 cs 正后面，合并
-	case c == cs.ToChar+1:
-		cs.ToChar = c
-	// 俩不挨着
-	default:
+	// 原来的字符集可能不只有一段
+	var oldCharset []*Charset
+	maxID := CharsetTable[len(CharsetTable)-1].IndexID
+	// 将老的字符集拷贝一份（不懂为什么非要创建新的）
+	newCharset := copyCharset(oldCharset, maxID+1)
+	for _, csTemp := range CharsetTable {
+		if csTemp.IndexID == indexID {
+			oldCharset = append(oldCharset, csTemp)
+		}
+	}
+	if len(oldCharset) == 0 {
+		return -1
+	}
+	// 遍历老的字符集各段，看看能不能合并进去
+	for _, csTemp := range oldCharset {
+		// 在中间，无需其他操作即可合并
+		if c >= csTemp.FromChar && c <= csTemp.ToChar {
+			CharsetTable = append(CharsetTable, newCharset...)
+			return maxID + 1
+		}
+	}
+	// 看看是不是在边缘，合进来
+	// 不能与上个放在同一个循环里，防止两个重合
+	for index, csTemp := range oldCharset {
+		if c == csTemp.FromChar-1 || c == csTemp.ToChar+1 {
+			// 将新字符集对应段的边缘合并
+			if c == csTemp.FromChar-1 {
+				newCharset[index].FromChar = c
+			} else {
+				newCharset[index].ToChar = c
+			}
+			CharsetTable = append(CharsetTable, newCharset...)
+			return maxID + 1
+		}
+	}
+	// 完全没法合并了
+	// 按顺序插入新的字符集
+	for index, csTemp := range newCharset {
+		if c < csTemp.FromChar {
+			var csNew = Charset{IndexID: maxID + 1, SegmentID: index, FromChar: c, ToChar: c}
+			newCharset = append(newCharset[:index], append([]*Charset{&csNew}, newCharset[index:]...)...)
+			// 重新设置段 ID
+			for i := index + 1; i < len(newCharset); i++ {
+				newCharset[i].SegmentID = i
+			}
+			CharsetTable = append(CharsetTable, newCharset...)
+			return maxID + 1
+		}
+	}
+	// 也许是最后一个
+	var csNew = Charset{IndexID: maxID + 1, SegmentID: len(newCharset), FromChar: c, ToChar: c}
+	newCharset = append(newCharset, &csNew)
+	CharsetTable = append(CharsetTable, newCharset...)
+	return maxID + 1
+}
+
+// 将一个字符集复制一份
+func copyCharset(oldCharset []*Charset, newIndex int) (newCharset []*Charset) {
+	for _, csTemp := range oldCharset {
+		var csNew = Charset{IndexID: newIndex, SegmentID: csTemp.SegmentID, FromChar: csTemp.FromChar, ToChar: csTemp.ToChar}
+		newCharset = append(newCharset, &csNew)
 	}
 	return
 }
