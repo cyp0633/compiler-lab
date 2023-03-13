@@ -273,3 +273,14 @@ func plusClosureNFA(g *Graph) *Graph {
 	}
 	return g
 }
+
+// Kleene 闭包运算
+//
+// 0 或更多次
+func kleeneClosureNFA(g *Graph) *Graph {
+	g = plusClosureNFA(g)
+	// 再从最后一个到第一个加一个 epsilon 转换就行了
+	edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 1, NextState: 0}
+	g.EdgeTable = append(g.EdgeTable, &edge)
+	return g
+}

@@ -17,3 +17,7 @@ func TestProductNFA(t *testing.T) {
 func TestPlusClosureNFA(t *testing.T) {
 	_ = plusClosureNFA(&Graph{})
 }
+
+func TestKleeneClosureNFA(t *testing.T) {
+	_ = kleeneClosureNFA(&Graph{})
+}
