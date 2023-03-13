@@ -54,3 +54,15 @@ const (
 	// 非接受状态
 	StateUnmatch
 )
+
+// 生成基本 NFA，只有 0 和 1
+func generateBasicNFA(driver driverType, driverID int) (g *Graph) {
+	g = new(Graph)
+	state0 := State{StateID: 0, StateType: StateUnmatch, Category: LexemeIntegerConst}
+	state1 := State{StateID: 1, StateType: StateMatch, Category: LexemeIntegerConst}
+	edge := Edge{DriverType: driver, DriverID: driverID, FromState: 0, NextState: 1}
+	g.EdgeTable = append(g.EdgeTable, &edge)
+	g.StateTable = append(g.StateTable, &state0, &state1)
+	g.NumOfStates = 2
+	return
+}
