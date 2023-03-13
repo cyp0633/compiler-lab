@@ -40,8 +40,10 @@ const (
 type LexemeCategory int
 
 const (
+	// 无 category 值
+	LexemeNull LexemeCategory = iota
 	// 整数常量
-	LexemeIntegerConst LexemeCategory = iota
+	LexemeIntegerConst
 	// 实数常量
 	LexemeFloatConst
 	// 科学计数法常量

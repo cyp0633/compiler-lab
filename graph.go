@@ -58,8 +58,8 @@ const (
 // 生成基本 NFA，只有 0 和 1
 func generateBasicNFA(driver driverType, driverID int) (g *Graph) {
 	g = new(Graph)
-	state0 := State{StateID: 0, StateType: StateUnmatch, Category: LexemeIntegerConst}
-	state1 := State{StateID: 1, StateType: StateMatch, Category: LexemeIntegerConst}
+	state0 := State{StateID: 0, StateType: StateUnmatch, Category: LexemeNull}
+	state1 := State{StateID: 1, StateType: StateMatch, Category: LexemeNull}
 	edge := Edge{DriverType: driver, DriverID: driverID, FromState: 0, NextState: 1}
 	g.EdgeTable = append(g.EdgeTable, &edge)
 	g.StateTable = append(g.StateTable, &state0, &state1)
@@ -134,7 +134,7 @@ func unionNFAPreprocess(g *Graph) {
 			state.StateID++
 		}
 		// 新建一个 0 状态
-		state0 := State{StateID: 0, StateType: StateUnmatch, Category: LexemeIntegerConst}
+		state0 := State{StateID: 0, StateType: StateUnmatch, Category: LexemeNull}
 		// 新建一个 epsilon 转换
 		edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: 0, NextState: 1}
 		g.EdgeTable = append(g.EdgeTable, &edge)
@@ -144,7 +144,17 @@ func unionNFAPreprocess(g *Graph) {
 	if hasOutEdge {
 		g.NumOfStates++
 		// 新建一个状态
-		state := State{StateID: g.NumOfStates - 1, StateType: StateUnmatch, Category: LexemeIntegerConst}
+		state := State{StateID: g.NumOfStates - 1, StateType: StateUnmatch, Category: LexemeNull}
+		// 新建一个 epsilon 转换
+		edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 2, NextState: g.NumOfStates - 1}
+		g.EdgeTable = append(g.EdgeTable, &edge)
+		g.StateTable = append(g.StateTable, &state)
+	}
+	// 若最后一个状态带 category，则新建一个状态，从原来的最后一个状态用 epsilon 转换连接到新的状态
+	if g.StateTable[g.NumOfStates-1].Category != LexemeNull {
+		g.NumOfStates++
+		// 新建一个状态
+		state := State{StateID: g.NumOfStates - 1, StateType: StateUnmatch, Category: LexemeNull}
 		// 新建一个 epsilon 转换
 		edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 2, NextState: g.NumOfStates - 1}
 		g.EdgeTable = append(g.EdgeTable, &edge)
