@@ -155,6 +155,75 @@ func unionCharsetAndChar(indexID int, c rune) (newIndexID int) {
 	return maxID + 1
 }
 
+func unionTwoCharsets(charsetID1, charsetID2 int) (newIndexID int) {
+	// 找两个旧字符集
+	var charset1, charset2, newCharset []*Charset
+	newIndexID = CharsetTable[len(CharsetTable)-1].IndexID
+	for _, csTemp := range CharsetTable {
+		if csTemp.IndexID == charsetID1 {
+			charset1 = append(charset1, csTemp)
+		}
+		if csTemp.IndexID == charsetID2 {
+			charset2 = append(charset2, csTemp)
+		}
+	}
+	if len(charset1) == 0 || len(charset2) == 0 {
+		return -1
+	}
+	// 将两个字符集依次合并到新字符集
+	segmentID := 0
+	for len(charset1) > 0 && len(charset2) > 0 {
+		switch {
+		// charset1 没了
+		case len(charset1) == 0:
+			var csNew = Charset{IndexID: newIndexID, SegmentID: segmentID, FromChar: charset2[0].FromChar, ToChar: charset2[0].ToChar}
+			newCharset = append(newCharset, &csNew)
+			// 从 charset2 中移除
+			charset2 = charset2[1:]
+		// charset2 没了
+		case len(charset2) == 0:
+			var csNew = Charset{IndexID: newIndexID, SegmentID: segmentID, FromChar: charset1[0].FromChar, ToChar: charset1[0].ToChar}
+			newCharset = append(newCharset, &csNew)
+			// 从 charset1 中移除
+			charset1 = charset1[1:]
+		// 不重合，charset1[0] 在前，而且接不上
+		case charset1[0].ToChar < charset2[0].FromChar-1:
+			var csNew = Charset{IndexID: newIndexID, SegmentID: segmentID, FromChar: charset1[0].FromChar, ToChar: charset1[0].ToChar}
+			newCharset = append(newCharset, &csNew)
+			// 从 charset1 中移除
+			charset1 = charset1[1:]
+		// 不重合，charset2[0] 在前，而且接不上
+		case charset2[0].ToChar < charset1[0].FromChar-1:
+			var csNew = Charset{IndexID: newIndexID, SegmentID: segmentID, FromChar: charset2[0].FromChar, ToChar: charset2[0].ToChar}
+			newCharset = append(newCharset, &csNew)
+			// 从 charset2 中移除
+			charset2 = charset2[1:]
+		// 重合
+		default:
+			// 取两端
+			var fromChar, toChar rune
+			if charset1[0].FromChar < charset2[0].FromChar {
+				fromChar = charset2[0].FromChar
+			} else {
+				fromChar = charset1[0].FromChar
+			}
+			if charset1[0].ToChar < charset2[0].ToChar {
+				toChar = charset1[0].ToChar
+			} else {
+				toChar = charset2[0].ToChar
+			}
+			var csNew = Charset{IndexID: newIndexID, SegmentID: segmentID, FromChar: fromChar, ToChar: toChar}
+			newCharset = append(newCharset, &csNew)
+			// 从 charset1 和 charset2 中移除
+			charset1 = charset1[1:]
+			charset2 = charset2[1:]
+		}
+		segmentID++
+	}
+	CharsetTable = append(CharsetTable, newCharset...)
+	return
+}
+
 // 将一个字符集复制一份
 func copyCharset(oldCharset []*Charset, newIndex int) (newCharset []*Charset) {
 	for _, csTemp := range oldCharset {
