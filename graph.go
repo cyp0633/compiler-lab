@@ -224,3 +224,52 @@ func productNFA(g1, g2 *Graph) (g *Graph) {
 	g.StateTable = append(g.StateTable, g2Copy.StateTable...)
 	return
 }
+
+// 正闭包运算
+//
+// 1 或更多次
+func plusClosureNFA(g *Graph) *Graph {
+	g = copyNFA(g)
+	hasInEdge, hasOutEdge := false, false
+	for _, edge := range g.EdgeTable {
+		if edge.NextState == g.NumOfStates-1 {
+			hasOutEdge = true
+		}
+		if edge.FromState == 0 {
+			hasInEdge = true
+		}
+	}
+	// 不管怎样，先从最后一个到第一个加一个 epsilon 转换
+	edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 1, NextState: 0}
+	g.EdgeTable = append(g.EdgeTable, &edge)
+	// 如果有入边，就加一个 0，用 epsilon 连接原来的 0
+	if hasInEdge {
+		g.NumOfStates++
+		// 修改编号
+		for _, edge := range g.EdgeTable {
+			edge.FromState++
+			edge.NextState++
+		}
+		for _, state := range g.StateTable {
+			state.StateID++
+		}
+		// 新建一个状态
+		state := State{StateID: 0, StateType: StateUnmatch, Category: LexemeNull}
+		// 新建一个 epsilon 转换
+		edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: 1, NextState: 0}
+		g.EdgeTable = append(g.EdgeTable, &edge)
+		g.StateTable = append(g.StateTable, &state)
+	}
+	// 如果有出边，就加一个最后一个，用 epsilon 连接原来的最后一个
+	if hasOutEdge {
+		g.NumOfStates++
+		// 新建一个状态
+		state := State{StateID: g.NumOfStates - 1, StateType: StateMatch, Category: LexemeNull}
+		// 新建一个 epsilon 转换
+		edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 2, NextState: g.NumOfStates - 1}
+		g.StateTable[g.NumOfStates-2].StateType = StateUnmatch
+		g.EdgeTable = append(g.EdgeTable, &edge)
+		g.StateTable = append(g.StateTable, &state)
+	}
+	return g
+}

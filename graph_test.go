@@ -13,3 +13,7 @@ func TestUnionNFA(t *testing.T) {
 func TestProductNFA(t *testing.T) {
 	_ = productNFA(&Graph{}, &Graph{})
 }
+
+func TestPlusClosureNFA(t *testing.T) {
+	_ = plusClosureNFA(&Graph{})
+}
