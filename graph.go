@@ -238,32 +238,35 @@ func plusClosureNFA(g *Graph) *Graph {
 	// 不管怎样，先从最后一个到第一个加一个 epsilon 转换
 	edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 1, NextState: 0}
 	g.EdgeTable = append(g.EdgeTable, &edge)
+	// 由于加入了一个 epsilon 转换，所以不能直接使用 unionNFAPreprocess1 加状态
 	// 如果有入边，就加一个 0，用 epsilon 连接原来的 0
 	if hasInEdge {
 		g.NumOfStates++
-		// 修改编号
+		// 将原来边的序号加 1
 		for _, edge := range g.EdgeTable {
 			edge.FromState++
 			edge.NextState++
 		}
+		// 将原来状态的序号加 1
 		for _, state := range g.StateTable {
 			state.StateID++
 		}
-		// 新建一个状态
-		state := State{StateID: 0, StateType: StateUnmatch, Category: LexemeNull}
+		// 新建一个 0 状态
+		state0 := State{StateID: 0, StateType: StateUnmatch, Category: LexemeNull}
 		// 新建一个 epsilon 转换
-		edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: 1, NextState: 0}
+		edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: 0, NextState: 1}
 		g.EdgeTable = append(g.EdgeTable, &edge)
-		g.StateTable = append(g.StateTable, &state)
+		g.StateTable = append(g.StateTable, &state0)
 	}
-	// 如果有出边，就加一个最后一个，用 epsilon 连接原来的最后一个
+	// 若最后一个状态有出边，则新建一个状态，从原来的最后一个状态用 epsilon 转换连接到新的状态
 	if hasOutEdge {
 		g.NumOfStates++
+		// 修改接受状态
+		g.StateTable[g.NumOfStates-2].StateType = StateUnmatch
 		// 新建一个状态
 		state := State{StateID: g.NumOfStates - 1, StateType: StateMatch, Category: LexemeNull}
 		// 新建一个 epsilon 转换
 		edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 2, NextState: g.NumOfStates - 1}
-		g.StateTable[g.NumOfStates-2].StateType = StateUnmatch
 		g.EdgeTable = append(g.EdgeTable, &edge)
 		g.StateTable = append(g.StateTable, &state)
 	}
