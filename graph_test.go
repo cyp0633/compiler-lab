@@ -21,3 +21,7 @@ func TestPlusClosureNFA(t *testing.T) {
 func TestKleeneClosureNFA(t *testing.T) {
 	_ = kleeneClosureNFA(&Graph{})
 }
+
+func TestZeroOrOneNFA(t *testing.T) {
+	_ = zeroOrOneNFA(&Graph{})
+}

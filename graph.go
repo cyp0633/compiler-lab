@@ -74,7 +74,9 @@ func unionNFA(g1, g2 *Graph) (g *Graph) {
 	g2 = copyNFA(g2)
 	// 最简并之前的预处理
 	unionNFAPreprocess(g1)
+	unionNFAPreprocess2(g1)
 	unionNFAPreprocess(g2)
+	unionNFAPreprocess2(g2)
 	// 合并
 	g = new(Graph)
 	// 添加新的起始和接受
@@ -109,18 +111,10 @@ func unionNFA(g1, g2 *Graph) (g *Graph) {
 }
 
 // NFA 并运算的预处理
+//
+// 也就是根据有无出边在前后加状态
 func unionNFAPreprocess(g *Graph) {
-	hasInEdge, hasOutEdge := false, false
-	for _, edge := range g.EdgeTable {
-		// 0 状态有入边
-		if edge.NextState == 0 {
-			hasInEdge = true
-		}
-		// 最后一个状态有出边
-		if edge.FromState == g.NumOfStates-1 {
-			hasOutEdge = true
-		}
-	}
+	hasInEdge, hasOutEdge := inOutEdge(g)
 	// 若 0 有入边，则新建一个 0 状态，用 epsilon 转换连接到原来的 0，并修改序号
 	if hasInEdge {
 		g.NumOfStates++
@@ -143,18 +137,28 @@ func unionNFAPreprocess(g *Graph) {
 	// 若最后一个状态有出边，则新建一个状态，从原来的最后一个状态用 epsilon 转换连接到新的状态
 	if hasOutEdge {
 		g.NumOfStates++
+		// 修改接受状态
+		g.StateTable[g.NumOfStates-2].StateType = StateUnmatch
 		// 新建一个状态
-		state := State{StateID: g.NumOfStates - 1, StateType: StateUnmatch, Category: LexemeNull}
+		state := State{StateID: g.NumOfStates - 1, StateType: StateMatch, Category: LexemeNull}
 		// 新建一个 epsilon 转换
 		edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 2, NextState: g.NumOfStates - 1}
 		g.EdgeTable = append(g.EdgeTable, &edge)
 		g.StateTable = append(g.StateTable, &state)
 	}
+}
+
+// NFA 并运算的预处理第二步
+//
+// 独立带 category 的状态
+func unionNFAPreprocess2(g *Graph) {
 	// 若最后一个状态带 category，则新建一个状态，从原来的最后一个状态用 epsilon 转换连接到新的状态
 	if g.StateTable[g.NumOfStates-1].Category != LexemeNull {
 		g.NumOfStates++
+		// 修改接受状态
+		g.StateTable[g.NumOfStates-2].StateType = StateUnmatch
 		// 新建一个状态
-		state := State{StateID: g.NumOfStates - 1, StateType: StateUnmatch, Category: LexemeNull}
+		state := State{StateID: g.NumOfStates - 1, StateType: StateMatch, Category: LexemeNull}
 		// 新建一个 epsilon 转换
 		edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 2, NextState: g.NumOfStates - 1}
 		g.EdgeTable = append(g.EdgeTable, &edge)
@@ -230,15 +234,7 @@ func productNFA(g1, g2 *Graph) (g *Graph) {
 // 1 或更多次
 func plusClosureNFA(g *Graph) *Graph {
 	g = copyNFA(g)
-	hasInEdge, hasOutEdge := false, false
-	for _, edge := range g.EdgeTable {
-		if edge.NextState == g.NumOfStates-1 {
-			hasOutEdge = true
-		}
-		if edge.FromState == 0 {
-			hasInEdge = true
-		}
-	}
+	hasInEdge, hasOutEdge := inOutEdge(g)
 	// 不管怎样，先从最后一个到第一个加一个 epsilon 转换
 	edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 1, NextState: 0}
 	g.EdgeTable = append(g.EdgeTable, &edge)
@@ -283,4 +279,27 @@ func kleeneClosureNFA(g *Graph) *Graph {
 	edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 1, NextState: 0}
 	g.EdgeTable = append(g.EdgeTable, &edge)
 	return g
+}
+
+// 0 或 1 次
+func zeroOrOneNFA(g *Graph) *Graph {
+	g = copyNFA(g)
+	// 加状态
+	unionNFAPreprocess(g)
+	// 从第一个状态到最后一个状态加一个 epsilon 转换
+	edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: 0, NextState: g.NumOfStates - 1}
+	g.EdgeTable = append(g.EdgeTable, &edge)
+	return g
+}
+
+func inOutEdge(g *Graph) (hasInEdge, hasOutEdge bool) {
+	for _, edge := range g.EdgeTable {
+		if edge.NextState == g.NumOfStates-1 {
+			hasOutEdge = true
+		}
+		if edge.FromState == 0 {
+			hasInEdge = true
+		}
+	}
+	return
 }
