@@ -155,6 +155,9 @@ func unionCharsetAndChar(indexID int, c rune) (newIndexID int) {
 	return maxID + 1
 }
 
+// 字符集与字符集之间的并运算
+//
+// 将两个字符集合并
 func unionTwoCharsets(charsetID1, charsetID2 int) (newIndexID int) {
 	// 找两个旧字符集
 	var charset1, charset2, newCharset []*Charset
@@ -219,6 +222,47 @@ func unionTwoCharsets(charsetID1, charsetID2 int) (newIndexID int) {
 			charset2 = charset2[1:]
 		}
 		segmentID++
+	}
+	CharsetTable = append(CharsetTable, newCharset...)
+	return
+}
+
+// 字符集与字符之间的差运算
+//
+// 将一个字符从一个字符集中移除
+func difference(charsetID int, c rune) (newIndexID int) {
+	newIndexID = CharsetTable[len(CharsetTable)-1].IndexID + 1
+	var newCharset []*Charset
+	for _, csTemp := range CharsetTable {
+		if csTemp.IndexID == charsetID {
+			// 先在这里把 c 移除，后期重新分配段 ID
+			switch {
+			// 如果这一段就一个 c，就不加进去了
+			case csTemp.FromChar == c && csTemp.ToChar == c:
+				continue
+			// 起始是 c
+			case csTemp.FromChar == c:
+				var csNew = Charset{IndexID: newIndexID, SegmentID: csTemp.SegmentID, FromChar: c + 1, ToChar: csTemp.ToChar}
+				newCharset = append(newCharset, &csNew)
+			// 结束是 c
+			case csTemp.ToChar == c:
+				var csNew = Charset{IndexID: newIndexID, SegmentID: csTemp.SegmentID, FromChar: csTemp.FromChar, ToChar: c - 1}
+				newCharset = append(newCharset, &csNew)
+			// 中间是 c
+			case csTemp.FromChar < c && csTemp.ToChar > c:
+				var csNew1 = Charset{IndexID: newIndexID, SegmentID: csTemp.SegmentID, FromChar: csTemp.FromChar, ToChar: c - 1}
+				var csNew2 = Charset{IndexID: newIndexID, SegmentID: csTemp.SegmentID, FromChar: c + 1, ToChar: csTemp.ToChar}
+				newCharset = append(newCharset, &csNew1, &csNew2)
+			// 其他情况，就是不包含 c
+			default:
+				newCharset = append(newCharset, csTemp)
+			}
+		}
+	}
+	// 重新分配段 ID
+	// Go range 的第二个值是拷贝，之前可把我坑坏了
+	for i := range newCharset {
+		newCharset[i].SegmentID = i
 	}
 	CharsetTable = append(CharsetTable, newCharset...)
 	return

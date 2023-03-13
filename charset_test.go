@@ -17,3 +17,7 @@ func TestUnionCharsetAndChar(t *testing.T) {
 func TestUnionTwoCharsets(t *testing.T) {
 	unionTwoCharsets(1, 2)
 }
+
+func TestDifference(t *testing.T) {
+	difference(1, 'a')
+}
