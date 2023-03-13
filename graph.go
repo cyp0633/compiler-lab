@@ -66,3 +66,14 @@ func generateBasicNFA(driver driverType, driverID int) (g *Graph) {
 	g.NumOfStates = 2
 	return
 }
+
+// NFA 的并运算
+func unionNFA(g1, g2 *Graph) (g *Graph) {
+	g = new(Graph)
+	g.EdgeTable = append(g.EdgeTable, g1.EdgeTable...)
+	g.EdgeTable = append(g.EdgeTable, g2.EdgeTable...)
+	g.StateTable = append(g.StateTable, g1.StateTable...)
+	g.StateTable = append(g.StateTable, g2.StateTable...)
+	g.NumOfStates = g1.NumOfStates + g2.NumOfStates
+	return
+}
