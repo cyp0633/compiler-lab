@@ -51,6 +51,68 @@ func TestUnionNFA(t *testing.T) {
 	}
 }
 
+// 出入边计数测试
+func TestInOutEdge(t *testing.T) {
+	// 无入边，无出边
+	g1 := Graph{
+		GraphId:     1,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	in, out := g1.inOutEdge()
+	if in || out {
+		t.Errorf("inOutEdge failed, in: %v, out: %v\nExpected: no in, no out", in, out)
+	}
+
+	// 有入边，无出边
+	g2 := Graph{
+		GraphId:     2,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+			{FromState: 1, NextState: 0, DriverID: 3, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	in, out = g2.inOutEdge()
+	if !in || out {
+		t.Errorf("inOutEdge failed, in: %v, out: %v\nExpected: has in, no out", in, out)
+	}
+
+	// 无入边，有出边
+	g3 := Graph{
+		GraphId:     3,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+			{FromState: 2, NextState: 1, DriverID: 3, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	in, out = g3.inOutEdge()
+	if in || !out {
+		t.Errorf("inOutEdge failed, in: %v, out: %v\nExpected: no in, has out", in, out)
+	}
+}
+
 func TestProductNFA(t *testing.T) {
 	_ = productNFA(&Graph{}, &Graph{})
 }

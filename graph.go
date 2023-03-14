@@ -141,7 +141,7 @@ func unionNFA(g1, g2 *Graph) (g *Graph) {
 //
 // 也就是根据有无出边在前后加状态
 func unionNFAPreprocess(g *Graph) {
-	hasInEdge, hasOutEdge := inOutEdge(g)
+	hasInEdge, hasOutEdge := g.inOutEdge()
 	// 若 0 有入边，则新建一个 0 状态，用 epsilon 转换连接到原来的 0，并修改序号
 	if hasInEdge {
 		g.NumOfStates++
@@ -261,7 +261,7 @@ func productNFA(g1, g2 *Graph) (g *Graph) {
 // 1 或更多次
 func plusClosureNFA(g *Graph) *Graph {
 	g = copyNFA(g)
-	hasInEdge, hasOutEdge := inOutEdge(g)
+	hasInEdge, hasOutEdge := g.inOutEdge()
 	// 不管怎样，先从最后一个到第一个加一个 epsilon 转换
 	edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 1, NextState: 0}
 	g.EdgeTable = append(g.EdgeTable, &edge)
@@ -322,7 +322,7 @@ func zeroOrOneNFA(g *Graph) *Graph {
 	return g
 }
 
-func inOutEdge(g *Graph) (hasInEdge, hasOutEdge bool) {
+func (g *Graph) inOutEdge() (hasInEdge, hasOutEdge bool) {
 	for _, edge := range g.EdgeTable {
 		// 接受状态出边
 		if edge.FromState == g.NumOfStates-1 {
