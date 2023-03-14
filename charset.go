@@ -162,8 +162,14 @@ func unionTwoCharsets(charsetID1, charsetID2 int) (newIndexID int) {
 			charset1 = charset1[1:]
 			charset2 = charset2[1:]
 		}
-		newCharset = append(newCharset, &csNew)
-		segmentID++
+		// 看看能否与上一 segment 合并
+		if len(newCharset) > 0 && newCharset[len(newCharset)-1].ToChar >= csNew.FromChar-1 {
+			newCharset[len(newCharset)-1].ToChar = csNew.ToChar // 这里就不需要多加一个段了
+		} else {
+			// 合并不了，再加一个段
+			newCharset = append(newCharset, &csNew)
+			segmentID++
+		}
 	}
 	CharsetTable = append(CharsetTable, newCharset...)
 	return

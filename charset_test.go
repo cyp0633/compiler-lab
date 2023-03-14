@@ -46,6 +46,12 @@ func TestUnionTwoCharsets(t *testing.T) {
 	// 有多段的
 	id7 := unionTwoCharsets(id3, id6)
 	printCharset(id7)
+
+	// 后面跟前面重合的
+	id8 := rangeChars('e', 'g')
+	id9 := unionTwoCharsets(id4, id8)
+	id10 := unionTwoCharsets(id3, id9)
+	printCharset(id10)
 }
 
 func TestDifference(t *testing.T) {
