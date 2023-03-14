@@ -51,6 +51,74 @@ func TestUnionNFA(t *testing.T) {
 	}
 }
 
+// NFA 并运算预处理 1 测试
+func TestUnionNFAPreprocess(t *testing.T) {
+	// 无入边，无出边
+	g1 := Graph{
+		GraphId:     1,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	unionNFAPreprocess(&g1)
+	printNFA(&g1)
+	// 仍然三个状态两条边
+	if g1.NumOfStates != 3 || len(g1.StateTable) != 3 || len(g1.EdgeTable) != 2 {
+		t.Errorf("unionNFAPreprocess failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g1.NumOfStates, len(g1.StateTable), len(g1.EdgeTable))
+	}
+
+	// 有入边，无出边
+	g2 := Graph{
+		GraphId:     2,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+			{FromState: 1, NextState: 0, DriverID: 3, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	unionNFAPreprocess(&g2)
+	printNFA(&g2)
+	// 前面多个状态
+	if g2.NumOfStates != 4 || len(g2.StateTable) != 4 || len(g2.EdgeTable) != 4 {
+		t.Errorf("unionNFAPreprocess failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g2.NumOfStates, len(g2.StateTable), len(g2.EdgeTable))
+	}
+
+	// 无入边，有出边
+	g3 := Graph{
+		GraphId:     3,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+			{FromState: 2, NextState: 1, DriverID: 3, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	unionNFAPreprocess(&g3)
+	printNFA(&g3)
+	// 后面多个状态
+	if g3.NumOfStates != 4 || len(g3.StateTable) != 4 || len(g3.EdgeTable) != 4 {
+		t.Errorf("unionNFAPreprocess failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g3.NumOfStates, len(g3.StateTable), len(g3.EdgeTable))
+	}
+}
+
 // 出入边计数测试
 func TestInOutEdge(t *testing.T) {
 	// 无入边，无出边
