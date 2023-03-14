@@ -179,7 +179,7 @@ func unionTwoCharsets(charsetID1, charsetID2 int) (newIndexID int) {
 //
 // 将一个字符从一个字符集中移除
 func difference(charsetID int, c rune) (newIndexID int) {
-	newIndexID = CharsetTable[len(CharsetTable)-1].IndexID + 1
+	newIndexID = maxIndexID() + 1
 	var newCharset []*Charset
 	for _, csTemp := range CharsetTable {
 		if csTemp.IndexID == charsetID {
@@ -207,6 +207,8 @@ func difference(charsetID int, c rune) (newIndexID int) {
 			}
 		}
 	}
+	// 重新拷贝
+	newCharset = copyCharset(newCharset, newIndexID)
 	// 重新分配段 ID
 	// Go range 的第二个值是拷贝，之前可把我坑坏了
 	for i := range newCharset {
