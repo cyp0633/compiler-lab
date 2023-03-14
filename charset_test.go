@@ -31,7 +31,21 @@ func TestUnionCharsetAndChar(t *testing.T) {
 }
 
 func TestUnionTwoCharsets(t *testing.T) {
-	unionTwoCharsets(1, 2)
+	// 不搭边
+	id1 := rangeChars('b', 'e')
+	id2 := rangeChars('h', 'l')
+	id3 := unionTwoCharsets(id1, id2)
+	printCharset(id3)
+
+	// 两个长一点的
+	id4 := rangeChars('a', 'c')
+	id5 := rangeChars('g', 'z')
+	id6 := unionTwoCharsets(id4, id5)
+	printCharset(id6)
+
+	// 有多段的
+	id7 := unionTwoCharsets(id3, id6)
+	printCharset(id7)
 }
 
 func TestDifference(t *testing.T) {
