@@ -181,6 +181,28 @@ func TestInOutEdge(t *testing.T) {
 	}
 }
 
+func TestUnionNFAPreprocess2(t *testing.T) {
+	// 最后一个状态有 category 属性
+	g1 := Graph{
+		GraphId:     1,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeIntegerConst},
+		},
+	}
+	unionNFAPreprocess2(&g1)
+	printNFA(&g1)
+	if g1.NumOfStates != 4 || len(g1.StateTable) != 4 || len(g1.EdgeTable) != 3 {
+		t.Errorf("unionNFAPreprocess2 failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g1.NumOfStates, len(g1.StateTable), len(g1.EdgeTable))
+	}
+}
+
 func TestProductNFA(t *testing.T) {
 	_ = productNFA(&Graph{}, &Graph{})
 }
