@@ -20,7 +20,7 @@ var CharsetTable []*Charset
 // 生成一个字符集，包含从 fromChar 到 toChar 的所有字符
 func rangeChars(fromChar rune, toChar rune) (indexID int) {
 	var c = Charset{FromChar: fromChar, ToChar: toChar}
-	c.IndexID = CharsetTable[len(CharsetTable)-1].SegmentID + 1
+	c.IndexID = maxIndexID() + 1
 	c.SegmentID = 0
 	CharsetTable = append(CharsetTable, &c)
 	return c.IndexID
@@ -31,11 +31,11 @@ func rangeChars(fromChar rune, toChar rune) (indexID int) {
 // 生成一个字符集，包含 c1 和 c2
 func unionChars(c1 rune, c2 rune) (indexID int) {
 	var cs1 = Charset{FromChar: c1, ToChar: c1}
-	cs1.IndexID = CharsetTable[len(CharsetTable)-1].SegmentID + 1
+	cs1.IndexID = maxIndexID() + 1
 	cs1.SegmentID = 0
 	var cs2 = Charset{FromChar: c2, ToChar: c2}
-	cs2.IndexID = CharsetTable[len(CharsetTable)-1].SegmentID + 1
-	cs2.SegmentID = 0
+	cs2.IndexID = maxIndexID() + 1 // 属于同一个 charset 的不同段，index 一样
+	cs2.SegmentID = 1
 	CharsetTable = append(CharsetTable, &cs1, &cs2)
 	return cs1.IndexID
 }
@@ -219,5 +219,14 @@ func copyCharset(oldCharset []*Charset, newIndex int) (newCharset []*Charset) {
 		var csNew = Charset{IndexID: newIndex, SegmentID: csTemp.SegmentID, FromChar: csTemp.FromChar, ToChar: csTemp.ToChar}
 		newCharset = append(newCharset, &csNew)
 	}
+	return
+}
+
+// 获得最大的字符集 ID
+func maxIndexID() (maxID int) {
+	if len(CharsetTable) == 0 {
+		return 0
+	}
+	maxID = CharsetTable[len(CharsetTable)-1].IndexID
 	return
 }
