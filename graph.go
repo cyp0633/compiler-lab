@@ -36,6 +36,19 @@ const (
 	DriverCharset
 )
 
+func (d driverType) String() string {
+	switch d {
+	case DriverNull:
+		return "null"
+	case DriverChar:
+		return "char"
+	case DriverCharset:
+		return "charset"
+	default:
+		return "unknown"
+	}
+}
+
 // 图的状态（节点）
 type State struct {
 	// 状态 ID
@@ -54,6 +67,17 @@ const (
 	// 非接受状态
 	StateUnmatch
 )
+
+func (s stateType) String() string {
+	switch s {
+	case StateMatch:
+		return "match"
+	case StateUnmatch:
+		return "unmatch"
+	default:
+		return "unknown"
+	}
+}
 
 // 生成基本 NFA，只有 0 和 1
 func generateBasicNFA(driver driverType, driverID int) (g *Graph) {
@@ -79,11 +103,10 @@ func unionNFA(g1, g2 *Graph) (g *Graph) {
 	unionNFAPreprocess2(g2)
 	// 合并
 	g = new(Graph)
-	// 添加新的起始和接受
-	g.NumOfStates = g1.NumOfStates + g2.NumOfStates
+	// 添加新的起始状态
+	g.NumOfStates = g1.NumOfStates + g2.NumOfStates - 2
 	startState := State{StateID: 0, StateType: StateUnmatch}
-	endState := State{StateID: g.NumOfStates - 1, StateType: StateMatch}
-	g.StateTable = append(g.StateTable, &startState, &endState)
+	g.StateTable = append(g.StateTable, &startState)
 	// 将 g1 的状态拷贝进来，除了 0 和最后一个状态
 	for i := 1; i < g1.NumOfStates-1; i++ {
 		g.StateTable = append(g.StateTable, g1.StateTable[i])
@@ -97,16 +120,20 @@ func unionNFA(g1, g2 *Graph) (g *Graph) {
 	}
 	// 将 g2 的状态拷贝进来，除了 0 和最后一个状态，并对序号进行修改
 	for i := 1; i < g2.NumOfStates-1; i++ {
+		g2.StateTable[i].StateID += g1.NumOfStates - 2
 		g.StateTable = append(g.StateTable, g2.StateTable[i])
-		g.StateTable[i+g1.NumOfStates-1].StateID += g1.NumOfStates - 1
 	}
 	// 将 g2 的边拷贝进来，对指向每一个边的序号进行修改
 	for _, edge := range g2.EdgeTable {
 		if edge.FromState != 0 {
-			edge.FromState += g1.NumOfStates - 1
+			edge.FromState += g1.NumOfStates - 2
 		}
-		edge.NextState += g1.NumOfStates - 1
+		edge.NextState += g1.NumOfStates - 2
+		g.EdgeTable = append(g.EdgeTable, edge)
 	}
+	// 添加新的接受状态
+	endState := State{StateID: g.NumOfStates - 1, StateType: StateMatch}
+	g.StateTable = append(g.StateTable, &endState)
 	return
 }
 
@@ -297,10 +324,12 @@ func zeroOrOneNFA(g *Graph) *Graph {
 
 func inOutEdge(g *Graph) (hasInEdge, hasOutEdge bool) {
 	for _, edge := range g.EdgeTable {
-		if edge.NextState == g.NumOfStates-1 {
+		// 接受状态出边
+		if edge.FromState == g.NumOfStates-1 {
 			hasOutEdge = true
 		}
-		if edge.FromState == 0 {
+		// 初始状态入边
+		if edge.NextState == 0 {
 			hasInEdge = true
 		}
 	}

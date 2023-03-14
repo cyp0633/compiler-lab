@@ -46,7 +46,7 @@ func TestUnionNFA(t *testing.T) {
 	g3 := unionNFA(&g1, &g2)
 	printNFA(g3)
 	// 结果：6 个状态，6 条边
-	if g3.NumOfStates != 6 || len(g3.StateTable) != 6 || len(g3.EdgeTable) != 6 {
+	if g3.NumOfStates != 4 || len(g3.StateTable) != 4 || len(g3.EdgeTable) != 4 {
 		t.Errorf("unionNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g3.NumOfStates, len(g3.StateTable), len(g3.EdgeTable))
 	}
 }
