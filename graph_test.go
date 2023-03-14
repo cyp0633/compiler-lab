@@ -204,7 +204,78 @@ func TestUnionNFAPreprocess2(t *testing.T) {
 }
 
 func TestProductNFA(t *testing.T) {
-	_ = productNFA(&Graph{}, &Graph{})
+	// 无入边，无出边
+	g1 := Graph{
+		GraphId:     1,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	// 有入边，无出边
+	g2 := Graph{
+		GraphId:     2,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+			{FromState: 1, NextState: 0, DriverID: 3, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	// 无入边，有出边
+	g3 := Graph{
+		GraphId:     3,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+			{FromState: 2, NextState: 1, DriverID: 3, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+
+	// 前一个有出，后一个有入
+	g4 := productNFA(&g3, &g2)
+	printNFA(g4)
+	if g4.NumOfStates != 6 || len(g4.StateTable) != 6 || len(g4.EdgeTable) != 7 {
+		t.Errorf("productNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g4.NumOfStates, len(g4.StateTable), len(g4.EdgeTable))
+	}
+
+	// 前一个有出，后一个无入
+	g5 := productNFA(&g3, &g1)
+	printNFA(g5)
+	if g5.NumOfStates != 5 || len(g5.StateTable) != 5 || len(g5.EdgeTable) != 5 {
+		t.Errorf("productNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g5.NumOfStates, len(g5.StateTable), len(g5.EdgeTable))
+	}
+
+	// 前一个无出，后一个有入
+	g6 := productNFA(&g1, &g2)
+	printNFA(g6)
+	if g6.NumOfStates != 5 || len(g6.StateTable) != 5 || len(g6.EdgeTable) != 5 {
+		t.Errorf("productNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g6.NumOfStates, len(g6.StateTable), len(g6.EdgeTable))
+	}
+
+	// 前一个无出，后一个无入
+	g7 := productNFA(&g1, &g1)
+	printNFA(g7)
+	if g7.NumOfStates != 5 || len(g7.StateTable) != 5 || len(g7.EdgeTable) != 4 {
+		t.Errorf("productNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g7.NumOfStates, len(g7.StateTable), len(g7.EdgeTable))
+	}
 }
 
 func TestPlusClosureNFA(t *testing.T) {

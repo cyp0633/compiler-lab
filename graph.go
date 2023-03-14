@@ -213,17 +213,7 @@ func copyNFA(g *Graph) (gCopy *Graph) {
 // 连接运算
 func productNFA(g1, g2 *Graph) (g *Graph) {
 	// g1 的出边和 g2 的入边
-	hasInEdge, hasOutEdge := false, false
-	for _, edge := range g1.EdgeTable {
-		if edge.NextState == g1.NumOfStates-1 {
-			hasOutEdge = true
-		}
-	}
-	for _, edge := range g2.EdgeTable {
-		if edge.FromState == 0 {
-			hasInEdge = true
-		}
-	}
+	hasInEdge, hasOutEdge := g1.inOutEdge()
 	// 将 g1 的状态拷贝进来
 	g = copyNFA(g1)
 	// 如果 g1 的出边和 g2 的入边都存在，则再加一个状态
