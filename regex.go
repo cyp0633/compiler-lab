@@ -63,3 +63,32 @@ const (
 	// 逻辑运算词
 	LexemeLogicOperator
 )
+
+func (l LexemeCategory) String() string {
+	switch l {
+	case LexemeNull:
+		return "null"
+	case LexemeIntegerConst:
+		return "integer"
+	case LexemeFloatConst:
+		return "float"
+	case LexemeScientificConst:
+		return "scientific"
+	case LexemeNumericOperator:
+		return "numeric operator"
+	case LexemeNote:
+		return "note"
+	case LexemeStringConst:
+		return "string"
+	case LexemeSpaceConst:
+		return "space"
+	case LexemeCompareOperator:
+		return "compare operator"
+	case LexemeID:
+		return "id"
+	case LexemeLogicOperator:
+		return "logic operator"
+	default:
+		return "unknown"
+	}
+}
