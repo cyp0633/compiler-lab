@@ -18,7 +18,15 @@ func TestUnionChars(t *testing.T) {
 func TestUnionCharsetAndChar(t *testing.T) {
 	// c 在 charset 中
 	baseID := rangeChars('a', 'c')
-	id := unionCharsetAndChar(baseID, 'b')
+	id := unionCharsetAndChar(baseID, 'c')
+	printCharset(id)
+
+	// c 在 charset 外的边缘
+	id = unionCharsetAndChar(baseID, 'd')
+	printCharset(id)
+
+	// c 在 charset 外，不搭边
+	id = unionCharsetAndChar(baseID, 'e')
 	printCharset(id)
 }
 

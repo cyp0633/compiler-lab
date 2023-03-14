@@ -46,14 +46,14 @@ func unionChars(c1 rune, c2 rune) (indexID int) {
 func unionCharsetAndChar(indexID int, c rune) (newIndexID int) {
 	// 原来的字符集可能不只有一段
 	var oldCharset []*Charset
-	maxID := CharsetTable[len(CharsetTable)-1].IndexID
-	// 将老的字符集拷贝一份（不懂为什么非要创建新的）
-	newCharset := copyCharset(oldCharset, maxID+1)
 	for _, csTemp := range CharsetTable {
 		if csTemp.IndexID == indexID {
 			oldCharset = append(oldCharset, csTemp)
 		}
 	}
+	maxID := maxIndexID()
+	// 将老的字符集拷贝一份（不懂为什么非要创建新的）
+	newCharset := copyCharset(oldCharset, maxID+1)
 	if len(oldCharset) == 0 {
 		return -1
 	}
