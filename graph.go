@@ -213,9 +213,14 @@ func copyNFA(g *Graph) (gCopy *Graph) {
 // 连接运算
 func productNFA(g1, g2 *Graph) (g *Graph) {
 	// g1 的出边和 g2 的入边
-	hasInEdge, hasOutEdge := g1.inOutEdge()
+	_, hasOutEdge := g1.inOutEdge()
+	hasInEdge, _ := g2.inOutEdge()
 	// 将 g1 的状态拷贝进来
 	g = copyNFA(g1)
+	// 将其最后一个状态设为未接受
+	g.StateTable[g.NumOfStates-1].StateType = StateUnmatch
+	// 将 g2 的状态拷贝进来，并修改序号
+	g2Copy := copyNFA(g2)
 	// 如果 g1 的出边和 g2 的入边都存在，则再加一个状态
 	// 原最后一个状态用 epsilon 转换连接到新的状态
 	// 新的状态用 epsilon 转换连接到 g2 的第一个状态
@@ -228,11 +233,8 @@ func productNFA(g1, g2 *Graph) (g *Graph) {
 		g.EdgeTable = append(g.EdgeTable, &edge)
 		g.StateTable = append(g.StateTable, &state)
 	}
-	// 建立到 g2 第一个状态的转换
-	edge := Edge{DriverType: DriverNull, DriverID: 0, FromState: g.NumOfStates - 1, NextState: g.NumOfStates}
-	g.EdgeTable = append(g.EdgeTable, &edge)
-	// 将 g2 的状态拷贝进来，并修改序号
-	g2Copy := copyNFA(g2)
+	// 去掉 g2 的第一个状态
+	g2Copy.StateTable = g2Copy.StateTable[1:]
 	for _, edge := range g2Copy.EdgeTable {
 		edge.FromState += g.NumOfStates - 1
 		edge.NextState += g.NumOfStates - 1
