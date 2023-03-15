@@ -1,5 +1,9 @@
 package main
 
+import (
+	"github.com/google/go-cmp/cmp"
+)
+
 // 子集构造法的 move 函数，state 经过 input 可达的状态
 func (g *Graph) Move(state int, input int, inputType driverType) (ac map[int]bool) {
 	ac = make(map[int]bool)
@@ -112,5 +116,60 @@ func (g *Graph) DTran(state int) (ac []int) {
 
 // 使用子集构造法从 NFA 转换为 DFA
 func (g *Graph) SubsetConstruction() (gNew *Graph) {
+	// 新节点表，key 为构造的子集，value 为新节点的编号
+	newNodes := make(map[*map[int]bool]int)
+	gNew = &Graph{}
+	// 第一个节点，为初始状态的 epsilonClosure
+	firstNode := g.EpsilonClosure(0)
+	newNodes[&firstNode] = 0
+	g.StateTable = append(g.StateTable, &State{StateID: 0, StateType: StateUnmatch, Category: LexemeNull})
+	gNew.NumOfStates++
+	// 构建输入集，key 为 {driverID, driverType}，value 为 true
+	inputSet := make(map[struct {
+		int
+		driverType
+	}]bool)
+	for _, edge := range g.EdgeTable {
+		if edge.DriverType != DriverNull {
+			inputSet[struct {
+				int
+				driverType
+			}{edge.DriverID, edge.DriverType}] = true
+		}
+	}
+	// 待遍历的新节点队列
+	queue := make(chan *map[int]bool, g.NumOfStates*10)
+	queue <- &firstNode
+	// 遍历每个新节点
+	for {
+		if len(queue) == 0 {
+			break
+		}
+		currNode := <-queue
+		// 遍历每种输入
+		for key := range inputSet {
+			node := g.EpsilonClosureSet(g.MoveSet(*currNode, key.int, key.driverType))
+			// 检查是否在节点表中
+			nodeInTable := false
+			for key := range newNodes {
+				if cmp.Equal(*key, node) {
+					nodeInTable = true
+					break
+				}
+			}
+			// 如果新节点不在节点表中，就添加到节点表和队列中
+			if !nodeInTable {
+				newNodes[&node] = gNew.NumOfStates
+				state := State{StateID: gNew.NumOfStates, StateType: StateUnmatch, Category: LexemeNull}
+				gNew.StateTable = append(gNew.StateTable, &state)
+				gNew.NumOfStates++
+				queue <- &node
+			}
+			// 添加边
+			edge := Edge{FromState: newNodes[currNode], NextState: newNodes[&node], DriverID: key.int, DriverType: key.driverType}
+			gNew.EdgeTable = append(gNew.EdgeTable, &edge)
+		}
+	}
+
 	return
 }
