@@ -2,6 +2,26 @@ package main
 
 // 子集构造法的 move 函数，state 经过 input 可达的状态
 func (g *Graph) Move(state int, input int) (ac map[int]bool) {
+	ac = make(map[int]bool)
+	ac[state] = true
+	queue := make(chan int, g.NumOfStates)
+	queue <- state
+	for {
+		if len(queue) == 0 {
+			break
+		}
+		temp := <-queue
+		for _, edge := range g.EdgeTable {
+			// 检查 state 的 input 出边
+			if edge.FromState == temp && edge.DriverType == DriverChar && edge.DriverID == input {
+				// 如果没有添加过，就添加到队列和 map 中
+				if _, ok := ac[edge.NextState]; !ok {
+					ac[edge.NextState] = true
+					queue <- edge.NextState
+				}
+			}
+		}
+	}
 	return
 }
 
