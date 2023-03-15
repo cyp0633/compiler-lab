@@ -143,7 +143,7 @@ func TestSubsetConstruction(t *testing.T) {
 		},
 	}
 	g2 := g1.SubsetConstruction()
-	printNFA(g2)
+	printGraph(g2)
 	result := cmp.Equal(g2, &solution)
 	if !result {
 		t.Errorf("SubsetConstruction failed")

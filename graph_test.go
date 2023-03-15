@@ -1,14 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 )
 
 // 测试生成基本 NFA
 func TestGenerateBasicNFA(t *testing.T) {
 	g := generateBasicNFA(DriverNull, 114514)
-	printNFA(g)
+	printGraph(g)
 	if g.NumOfStates != 2 || g.EdgeTable[0].DriverID != 114514 || g.EdgeTable[0].DriverType != DriverNull {
 		t.Error("generateBasicNFA failed")
 	}
@@ -44,7 +43,7 @@ func TestUnionNFA(t *testing.T) {
 		},
 	}
 	g3 := unionNFA(&g1, &g2)
-	printNFA(g3)
+	printGraph(g3)
 	// 结果：6 个状态，6 条边
 	if g3.NumOfStates != 4 || len(g3.StateTable) != 4 || len(g3.EdgeTable) != 4 {
 		t.Errorf("unionNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g3.NumOfStates, len(g3.StateTable), len(g3.EdgeTable))
@@ -68,7 +67,7 @@ func TestUnionNFAPreprocess(t *testing.T) {
 		},
 	}
 	unionNFAPreprocess(&g1)
-	printNFA(&g1)
+	printGraph(&g1)
 	// 仍然三个状态两条边
 	if g1.NumOfStates != 3 || len(g1.StateTable) != 3 || len(g1.EdgeTable) != 2 {
 		t.Errorf("unionNFAPreprocess failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g1.NumOfStates, len(g1.StateTable), len(g1.EdgeTable))
@@ -90,7 +89,7 @@ func TestUnionNFAPreprocess(t *testing.T) {
 		},
 	}
 	unionNFAPreprocess(&g2)
-	printNFA(&g2)
+	printGraph(&g2)
 	// 前面多个状态
 	if g2.NumOfStates != 4 || len(g2.StateTable) != 4 || len(g2.EdgeTable) != 4 {
 		t.Errorf("unionNFAPreprocess failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g2.NumOfStates, len(g2.StateTable), len(g2.EdgeTable))
@@ -112,7 +111,7 @@ func TestUnionNFAPreprocess(t *testing.T) {
 		},
 	}
 	unionNFAPreprocess(&g3)
-	printNFA(&g3)
+	printGraph(&g3)
 	// 后面多个状态
 	if g3.NumOfStates != 4 || len(g3.StateTable) != 4 || len(g3.EdgeTable) != 4 {
 		t.Errorf("unionNFAPreprocess failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g3.NumOfStates, len(g3.StateTable), len(g3.EdgeTable))
@@ -197,7 +196,7 @@ func TestUnionNFAPreprocess2(t *testing.T) {
 		},
 	}
 	unionNFAPreprocess2(&g1)
-	printNFA(&g1)
+	printGraph(&g1)
 	if g1.NumOfStates != 4 || len(g1.StateTable) != 4 || len(g1.EdgeTable) != 3 {
 		t.Errorf("unionNFAPreprocess2 failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g1.NumOfStates, len(g1.StateTable), len(g1.EdgeTable))
 	}
@@ -251,28 +250,28 @@ func TestProductNFA(t *testing.T) {
 
 	// 前一个有出，后一个有入
 	g4 := productNFA(&g3, &g2)
-	printNFA(g4)
+	printGraph(g4)
 	if g4.NumOfStates != 6 || len(g4.StateTable) != 6 || len(g4.EdgeTable) != 7 {
 		t.Errorf("productNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g4.NumOfStates, len(g4.StateTable), len(g4.EdgeTable))
 	}
 
 	// 前一个有出，后一个无入
 	g5 := productNFA(&g3, &g1)
-	printNFA(g5)
+	printGraph(g5)
 	if g5.NumOfStates != 5 || len(g5.StateTable) != 5 || len(g5.EdgeTable) != 5 {
 		t.Errorf("productNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g5.NumOfStates, len(g5.StateTable), len(g5.EdgeTable))
 	}
 
 	// 前一个无出，后一个有入
 	g6 := productNFA(&g1, &g2)
-	printNFA(g6)
+	printGraph(g6)
 	if g6.NumOfStates != 5 || len(g6.StateTable) != 5 || len(g6.EdgeTable) != 5 {
 		t.Errorf("productNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g6.NumOfStates, len(g6.StateTable), len(g6.EdgeTable))
 	}
 
 	// 前一个无出，后一个无入
 	g7 := productNFA(&g1, &g1)
-	printNFA(g7)
+	printGraph(g7)
 	if g7.NumOfStates != 5 || len(g7.StateTable) != 5 || len(g7.EdgeTable) != 4 {
 		t.Errorf("productNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g7.NumOfStates, len(g7.StateTable), len(g7.EdgeTable))
 	}
@@ -295,7 +294,7 @@ func TestPlusClosureNFA(t *testing.T) {
 		},
 	}
 	g11 := plusClosureNFA(&g1)
-	printNFA(g11)
+	printGraph(g11)
 	// 多一条 epsilon 边，状态数不变
 	if g11.NumOfStates != 3 || len(g11.StateTable) != 3 || len(g11.EdgeTable) != 3 {
 		t.Errorf("plusClosureNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g11.NumOfStates, len(g11.StateTable), len(g11.EdgeTable))
@@ -317,7 +316,7 @@ func TestPlusClosureNFA(t *testing.T) {
 		},
 	}
 	g21 := plusClosureNFA(&g2)
-	printNFA(g21)
+	printGraph(g21)
 	// 多两条 epsilon 边，前面加一个状态
 	if g21.NumOfStates != 4 || len(g21.StateTable) != 4 || len(g21.EdgeTable) != 5 {
 		t.Errorf("plusClosureNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g21.NumOfStates, len(g21.StateTable), len(g21.EdgeTable))
@@ -339,7 +338,7 @@ func TestPlusClosureNFA(t *testing.T) {
 		},
 	}
 	g31 := plusClosureNFA(&g3)
-	printNFA(g31)
+	printGraph(g31)
 	// 多两条 epsilon 边，后面加一个状态
 	if g31.NumOfStates != 4 || len(g31.StateTable) != 4 || len(g31.EdgeTable) != 5 {
 		t.Errorf("plusClosureNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g31.NumOfStates, len(g31.StateTable), len(g31.EdgeTable))
@@ -363,7 +362,7 @@ func TestKleeneClosureNFA(t *testing.T) {
 		},
 	}
 	g11 := kleeneClosureNFA(&g1)
-	printNFA(g11)
+	printGraph(g11)
 	// 多两条 epsilon 边，状态数不变
 	if g11.NumOfStates != 3 || len(g11.StateTable) != 3 || len(g11.EdgeTable) != 4 {
 		t.Errorf("kleeneClosureNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g11.NumOfStates, len(g11.StateTable), len(g11.EdgeTable))
@@ -385,7 +384,7 @@ func TestKleeneClosureNFA(t *testing.T) {
 		},
 	}
 	g21 := kleeneClosureNFA(&g2)
-	printNFA(g21)
+	printGraph(g21)
 	// 多三条 epsilon 边，前面加一个状态
 	if g21.NumOfStates != 4 || len(g21.StateTable) != 4 || len(g21.EdgeTable) != 6 {
 		t.Errorf("kleeneClosureNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g21.NumOfStates, len(g21.StateTable), len(g21.EdgeTable))
@@ -407,7 +406,7 @@ func TestKleeneClosureNFA(t *testing.T) {
 		},
 	}
 	g31 := kleeneClosureNFA(&g3)
-	printNFA(g31)
+	printGraph(g31)
 	// 多三条 epsilon 边，后面加一个状态
 	if g31.NumOfStates != 4 || len(g31.StateTable) != 4 || len(g31.EdgeTable) != 6 {
 		t.Errorf("kleeneClosureNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g31.NumOfStates, len(g31.StateTable), len(g31.EdgeTable))
@@ -430,7 +429,7 @@ func TestZeroOrOneNFA(t *testing.T) {
 		},
 	}
 	g11 := zeroOrOneNFA(&g1)
-	printNFA(g11)
+	printGraph(g11)
 	// 多一条 epsilon 边，状态数不变
 	if g11.NumOfStates != 3 || len(g11.StateTable) != 3 || len(g11.EdgeTable) != 3 {
 		t.Errorf("zeroOrOneNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g11.NumOfStates, len(g11.StateTable), len(g11.EdgeTable))
@@ -452,7 +451,7 @@ func TestZeroOrOneNFA(t *testing.T) {
 		},
 	}
 	g21 := zeroOrOneNFA(&g2)
-	printNFA(g21)
+	printGraph(g21)
 	// 多两条 epsilon 边，前面加一个状态
 	if g21.NumOfStates != 4 || len(g21.StateTable) != 4 || len(g21.EdgeTable) != 5 {
 		t.Errorf("zeroOrOneNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g21.NumOfStates, len(g21.StateTable), len(g21.EdgeTable))
@@ -474,20 +473,9 @@ func TestZeroOrOneNFA(t *testing.T) {
 		},
 	}
 	g31 := zeroOrOneNFA(&g3)
-	printNFA(g31)
+	printGraph(g31)
 	// 多两条 epsilon 边，后面加一个状态
 	if g31.NumOfStates != 4 || len(g31.StateTable) != 4 || len(g31.EdgeTable) != 5 {
 		t.Errorf("zeroOrOneNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g31.NumOfStates, len(g31.StateTable), len(g31.EdgeTable))
-	}
-}
-
-func printNFA(g *Graph) {
-	println("graph", g.GraphId)
-	println("numOfStates", g.NumOfStates)
-	for _, edge := range g.EdgeTable {
-		fmt.Printf("Edge: from #%v, to #%v, driver %v, type %v\n", edge.FromState, edge.NextState, edge.DriverID, edge.DriverType)
-	}
-	for _, state := range g.StateTable {
-		fmt.Printf("State: #%v, type %v, category %v\n", state.StateID, state.StateType, state.Category)
 	}
 }
