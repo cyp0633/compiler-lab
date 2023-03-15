@@ -278,12 +278,140 @@ func TestProductNFA(t *testing.T) {
 	}
 }
 
+// 正闭包测试
 func TestPlusClosureNFA(t *testing.T) {
-	_ = plusClosureNFA(&Graph{})
+	// 无入边，无出边
+	g1 := Graph{
+		GraphId:     1,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	g11 := plusClosureNFA(&g1)
+	printNFA(g11)
+	// 多一条 epsilon 边，状态数不变
+	if g11.NumOfStates != 3 || len(g11.StateTable) != 3 || len(g11.EdgeTable) != 3 {
+		t.Errorf("plusClosureNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g11.NumOfStates, len(g11.StateTable), len(g11.EdgeTable))
+	}
+
+	// 有入边，无出边
+	g2 := Graph{
+		GraphId:     2,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+			{FromState: 1, NextState: 0, DriverID: 3, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	g21 := plusClosureNFA(&g2)
+	printNFA(g21)
+	// 多两条 epsilon 边，前面加一个状态
+	if g21.NumOfStates != 4 || len(g21.StateTable) != 4 || len(g21.EdgeTable) != 5 {
+		t.Errorf("plusClosureNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g21.NumOfStates, len(g21.StateTable), len(g21.EdgeTable))
+	}
+
+	// 无入边，有出边
+	g3 := Graph{
+		GraphId:     3,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+			{FromState: 2, NextState: 1, DriverID: 3, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	g31 := plusClosureNFA(&g3)
+	printNFA(g31)
+	// 多两条 epsilon 边，后面加一个状态
+	if g31.NumOfStates != 4 || len(g31.StateTable) != 4 || len(g31.EdgeTable) != 5 {
+		t.Errorf("plusClosureNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g31.NumOfStates, len(g31.StateTable), len(g31.EdgeTable))
+	}
 }
 
+// Kleene 闭包测试
 func TestKleeneClosureNFA(t *testing.T) {
-	_ = kleeneClosureNFA(&Graph{})
+	// 无入边，无出边
+	g1 := Graph{
+		GraphId:     1,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	g11 := kleeneClosureNFA(&g1)
+	printNFA(g11)
+	// 多两条 epsilon 边，状态数不变
+	if g11.NumOfStates != 3 || len(g11.StateTable) != 3 || len(g11.EdgeTable) != 4 {
+		t.Errorf("kleeneClosureNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g11.NumOfStates, len(g11.StateTable), len(g11.EdgeTable))
+	}
+
+	// 有入边，无出边
+	g2 := Graph{
+		GraphId:     2,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+			{FromState: 1, NextState: 0, DriverID: 3, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	g21 := kleeneClosureNFA(&g2)
+	printNFA(g21)
+	// 多三条 epsilon 边，前面加一个状态
+	if g21.NumOfStates != 4 || len(g21.StateTable) != 4 || len(g21.EdgeTable) != 6 {
+		t.Errorf("kleeneClosureNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g21.NumOfStates, len(g21.StateTable), len(g21.EdgeTable))
+	}
+
+	// 无入边，有出边
+	g3 := Graph{
+		GraphId:     3,
+		NumOfStates: 3,
+		EdgeTable: []*Edge{
+			{FromState: 0, NextState: 1, DriverID: 1, DriverType: DriverNull},
+			{FromState: 1, NextState: 2, DriverID: 2, DriverType: DriverNull},
+			{FromState: 2, NextState: 1, DriverID: 3, DriverType: DriverNull},
+		},
+		StateTable: []*State{
+			{StateID: 0, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 1, StateType: StateUnmatch, Category: LexemeNull},
+			{StateID: 2, StateType: StateMatch, Category: LexemeNull},
+		},
+	}
+	g31 := kleeneClosureNFA(&g3)
+	printNFA(g31)
+	// 多三条 epsilon 边，后面加一个状态
+	if g31.NumOfStates != 4 || len(g31.StateTable) != 4 || len(g31.EdgeTable) != 6 {
+		t.Errorf("kleeneClosureNFA failed, NumOfStates: %v, len(StateTable): %v, len(EdgeTable): %v", g31.NumOfStates, len(g31.StateTable), len(g31.EdgeTable))
+	}
 }
 
 func TestZeroOrOneNFA(t *testing.T) {
