@@ -43,7 +43,11 @@ func (g *Graph) EpsilonClosureSet(stateSet map[int]bool) (ac map[int]bool) {
 		// 先添加 state
 		queue <- state
 	}
-	for temp := range queue {
+	for {
+		if len(queue) == 0 {
+			break
+		}
+		temp := <-queue
 		for _, edge := range g.EdgeTable {
 			// 检查 state 的出边中的 epsilon 转换
 			if edge.FromState == temp && edge.DriverType == DriverNull {

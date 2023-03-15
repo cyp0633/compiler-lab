@@ -21,7 +21,14 @@ func TestEpsilonClosure(t *testing.T) {
 		},
 	}
 	ac1 := g1.EpsilonClosure(0)
-	if !ac1[0] || !ac1[1] || !ac1[2] {
+	// 含有 0 1 2
+	if !ac1[0] || !ac1[1] || !ac1[2] || len(ac1) != 3 {
 		t.Errorf("EpsilonClosure(0) failed")
+	}
+
+	ac2 := g1.EpsilonClosureSet(map[int]bool{0: true, 4: true})
+	// 含有 0 1 2 4
+	if !ac2[0] || !ac2[1] || !ac2[2] || !ac2[4] || len(ac2) != 4 {
+		t.Errorf("EpsilonClosureSet(0, 4) failed")
 	}
 }
