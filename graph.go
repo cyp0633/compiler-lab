@@ -91,7 +91,7 @@ func generateBasicNFA(driver driverType, driverID int) (g *Graph) {
 	return
 }
 
-// NFA 的并运算
+// NFA 的并运算 a|b
 func unionNFA(g1, g2 *Graph) (g *Graph) {
 	// 拷贝两个 NFA
 	g1 = copyNFA(g1)
@@ -210,7 +210,7 @@ func copyNFA(g *Graph) (gCopy *Graph) {
 	return
 }
 
-// 连接运算
+// 连接运算 ab
 func productNFA(g1, g2 *Graph) (g *Graph) {
 	// g1 的出边和 g2 的入边
 	_, hasOutEdge := g1.inOutEdge()
@@ -248,7 +248,7 @@ func productNFA(g1, g2 *Graph) (g *Graph) {
 	return
 }
 
-// 正闭包运算
+// 正闭包运算 a+
 //
 // 1 或更多次
 func plusClosureNFA(g *Graph) *Graph {
@@ -292,7 +292,7 @@ func plusClosureNFA(g *Graph) *Graph {
 	return g
 }
 
-// Kleene 闭包运算
+// Kleene 闭包运算 a*
 //
 // 0 或更多次
 func kleeneClosureNFA(g *Graph) *Graph {
@@ -303,7 +303,7 @@ func kleeneClosureNFA(g *Graph) *Graph {
 	return g
 }
 
-// 0 或 1 次
+// 0 或 1 次 a?
 func zeroOrOneNFA(g *Graph) *Graph {
 	g = copyNFA(g)
 	// 加状态
@@ -329,7 +329,7 @@ func (g *Graph) inOutEdge() (hasInEdge, hasOutEdge bool) {
 }
 
 // 比较两个图是否相等
-func compare(g1,g2 *Graph) bool{
+func compare(g1, g2 *Graph) bool {
 	if g1.NumOfStates != g2.NumOfStates {
 		return false
 	}
