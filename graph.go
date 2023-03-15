@@ -86,7 +86,11 @@ func printGraph(g *Graph) {
 	println("graph", g.GraphId)
 	println("numOfStates", g.NumOfStates)
 	for _, edge := range g.EdgeTable {
-		fmt.Printf("Edge: from #%v, to #%v, driver %v, type %v\n", edge.FromState, edge.NextState, edge.DriverID, edge.DriverType)
+		if edge.DriverType == DriverChar {
+			fmt.Printf("Edge: from #%v, to #%v, driver '%c', type %v\n", edge.FromState, edge.NextState, edge.DriverID, edge.DriverType)
+		} else {
+			fmt.Printf("Edge: from #%v, to #%v, driver %v, type %v\n", edge.FromState, edge.NextState, edge.DriverID, edge.DriverType)
+		}
 	}
 	for _, state := range g.StateTable {
 		fmt.Printf("State: #%v, type %v, category %v\n", state.StateID, state.StateType, state.Category)
