@@ -3,7 +3,6 @@ package main
 // 子集构造法的 move 函数，state 经过 input 可达的状态
 func (g *Graph) Move(state int, input int, inputType driverType) (ac map[int]bool) {
 	ac = make(map[int]bool)
-	ac[state] = true
 	queue := make(chan int, g.NumOfStates)
 	queue <- state
 	for {
@@ -14,10 +13,9 @@ func (g *Graph) Move(state int, input int, inputType driverType) (ac map[int]boo
 		for _, edge := range g.EdgeTable {
 			// 检查 state 的 input 出边
 			if edge.FromState == temp && edge.DriverType == DriverChar && edge.DriverID == input {
-				// 如果没有添加过，就添加到队列和 map 中
+				// 如果没有添加过，就添加到 map 中
 				if _, ok := ac[edge.NextState]; !ok {
 					ac[edge.NextState] = true
-					queue <- edge.NextState
 				}
 			}
 		}
@@ -28,9 +26,6 @@ func (g *Graph) Move(state int, input int, inputType driverType) (ac map[int]boo
 // 子集构造法的 move 函数，stateSet 经过 input 可达的状态
 func (g *Graph) MoveSet(stateSet map[int]bool, input int, inputType driverType) (ac map[int]bool) {
 	ac = make(map[int]bool)
-	for state := range stateSet {
-		ac[state] = true
-	}
 	queue := make(chan int, g.NumOfStates)
 	for state := range stateSet {
 		queue <- state
@@ -43,10 +38,9 @@ func (g *Graph) MoveSet(stateSet map[int]bool, input int, inputType driverType) 
 		for _, edge := range g.EdgeTable {
 			// 检查 state 的 input 出边
 			if edge.FromState == temp && edge.DriverType == DriverChar && edge.DriverID == input {
-				// 如果没有添加过，就添加到队列和 map 中
+				// 如果没有添加过，就添加到 map 中
 				if _, ok := ac[edge.NextState]; !ok {
 					ac[edge.NextState] = true
-					queue <- edge.NextState
 				}
 			}
 		}
