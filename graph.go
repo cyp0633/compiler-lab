@@ -327,3 +327,42 @@ func (g *Graph) inOutEdge() (hasInEdge, hasOutEdge bool) {
 	}
 	return
 }
+
+// 比较两个图是否相等
+func compare(g1,g2 *Graph) bool{
+	if g1.NumOfStates != g2.NumOfStates {
+		return false
+	}
+	if len(g1.EdgeTable) != len(g2.EdgeTable) {
+		return false
+	}
+	if len(g1.StateTable) != len(g2.StateTable) {
+		return false
+	}
+	for i := 0; i < g1.NumOfStates; i++ {
+		if g1.StateTable[i].StateID != g2.StateTable[i].StateID {
+			return false
+		}
+		if g1.StateTable[i].StateType != g2.StateTable[i].StateType {
+			return false
+		}
+		if g1.StateTable[i].Category != g2.StateTable[i].Category {
+			return false
+		}
+	}
+	for i := 0; i < len(g1.EdgeTable); i++ {
+		if g1.EdgeTable[i].DriverType != g2.EdgeTable[i].DriverType {
+			return false
+		}
+		if g1.EdgeTable[i].DriverID != g2.EdgeTable[i].DriverID {
+			return false
+		}
+		if g1.EdgeTable[i].FromState != g2.EdgeTable[i].FromState {
+			return false
+		}
+		if g1.EdgeTable[i].NextState != g2.EdgeTable[i].NextState {
+			return false
+		}
+	}
+	return true
+}
