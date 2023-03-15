@@ -122,7 +122,7 @@ func (g *Graph) SubsetConstruction() (gNew *Graph) {
 	// 第一个节点，为初始状态的 epsilonClosure
 	firstNode := g.EpsilonClosure(0)
 	newNodes[&firstNode] = 0
-	g.StateTable = append(g.StateTable, &State{StateID: 0, StateType: StateUnmatch, Category: LexemeNull})
+	gNew.StateTable = append(gNew.StateTable, &State{StateID: 0, StateType: StateUnmatch, Category: LexemeNull})
 	gNew.NumOfStates++
 	// 构建输入集，key 为 {driverID, driverType}，value 为 true
 	inputSet := make(map[struct {
@@ -149,27 +149,29 @@ func (g *Graph) SubsetConstruction() (gNew *Graph) {
 		// 遍历每种输入
 		for key := range inputSet {
 			node := g.EpsilonClosureSet(g.MoveSet(*currNode, key.int, key.driverType))
-			// 检查是否在节点表中
-			nodeInTable := false
+			// 检查 DTran 在新节点表中的新分配序号，不在则 -1
+			nodeInTable := -1
 			for key := range newNodes {
 				if cmp.Equal(*key, node) {
-					nodeInTable = true
+					nodeInTable = newNodes[key]
 					break
 				}
 			}
 			// 如果新节点不在节点表中，就添加到节点表和队列中
-			if !nodeInTable {
+			if nodeInTable == -1 {
 				newNodes[&node] = gNew.NumOfStates
+				nodeInTable = gNew.NumOfStates
 				state := State{StateID: gNew.NumOfStates, StateType: StateUnmatch, Category: LexemeNull}
 				gNew.StateTable = append(gNew.StateTable, &state)
 				gNew.NumOfStates++
 				queue <- &node
 			}
 			// 添加边
-			edge := Edge{FromState: newNodes[currNode], NextState: newNodes[&node], DriverID: key.int, DriverType: key.driverType}
+			edge := Edge{FromState: newNodes[currNode], NextState: nodeInTable, DriverID: key.int, DriverType: key.driverType}
 			gNew.EdgeTable = append(gNew.EdgeTable, &edge)
 		}
 	}
-
+	// 将最后一个状态设为接受
+	gNew.StateTable[gNew.NumOfStates-1].StateType = StateMatch
 	return
 }
