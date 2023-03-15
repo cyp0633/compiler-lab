@@ -55,9 +55,16 @@ func TestMove(t *testing.T) {
 			{StateID: 4, StateType: StateMatch, Category: LexemeNull},
 		},
 	}
-	ac1 := g1.Move(1,'a')
+
+	ac1 := g1.Move(1, 'a', DriverChar)
 	// 含有 1 3 0
 	if !ac1[0] || !ac1[1] || !ac1[3] || len(ac1) != 3 {
 		t.Errorf("Move(1, 'a') failed, set: %v", ac1)
+	}
+
+	ac2 := g1.MoveSet(map[int]bool{1: true, 4: true}, 'a', DriverChar)
+	// 含有 1 3 0 4
+	if !ac2[0] || !ac2[1] || !ac2[3] || !ac2[4] || len(ac2) != 4 {
+		t.Errorf("MoveSet(1, 4, 'a') failed, set: %v", ac2)
 	}
 }
