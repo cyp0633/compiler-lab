@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -143,6 +144,12 @@ func TestSubsetConstruction(t *testing.T) {
 		},
 	}
 	g2 := g1.SubsetConstruction()
+	sort.Slice(g2.EdgeTable, func(i, j int) bool {
+		if g2.EdgeTable[i].FromState != g2.EdgeTable[j].FromState {
+			return g2.EdgeTable[i].FromState < g2.EdgeTable[j].FromState
+		}
+		return g2.EdgeTable[i].DriverID < g2.EdgeTable[j].DriverID
+	})
 	printGraph(g2)
 	result := cmp.Equal(g2, &solution)
 	if !result {
