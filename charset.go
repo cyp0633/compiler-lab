@@ -33,6 +33,10 @@ func unionChars(c1 rune, c2 rune) (indexID int) {
 	var cs1 = Charset{FromChar: c1, ToChar: c1}
 	cs1.IndexID = maxIndexID() + 1
 	cs1.SegmentID = 0
+	if c1 == c2 {
+		CharsetTable = append(CharsetTable, &cs1)
+		return cs1.IndexID
+	}
 	var cs2 = Charset{FromChar: c2, ToChar: c2}
 	cs2.IndexID = maxIndexID() + 1 // 属于同一个 charset 的不同段，index 一样
 	cs2.SegmentID = 1

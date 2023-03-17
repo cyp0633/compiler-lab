@@ -23,6 +23,13 @@ func TestUnionChars(t *testing.T) {
 	if len(CharsetTable) != base+2 || CharsetTable[base].FromChar != 'a' || CharsetTable[base].ToChar != 'a' || CharsetTable[base+1].FromChar != 'z' || CharsetTable[base+1].ToChar != 'z' {
 		t.Fail()
 	}
+
+	id = unionChars('a', 'a')
+	printCharset(id)
+	// 结果：1 个段，a-a
+	if len(CharsetTable) != base+3 || CharsetTable[base+2].FromChar != 'a' || CharsetTable[base+2].ToChar != 'a' {
+		t.Fail()
+	}
 }
 
 func TestUnionCharsetAndChar(t *testing.T) {
