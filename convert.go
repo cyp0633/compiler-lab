@@ -171,7 +171,11 @@ func (g *Graph) SubsetConstruction() (gNew *Graph) {
 			gNew.EdgeTable = append(gNew.EdgeTable, &edge)
 		}
 	}
-	// 将最后一个状态设为接受
-	gNew.StateTable[gNew.NumOfStates-1].StateType = StateMatch
+	// 将包含原图最后一个节点的新节点的类型改为终态
+	for key, index := range newNodes {
+		if _, ok := (*key)[g.NumOfStates-1]; ok {
+			gNew.StateTable[index].StateType = StateMatch
+		}
+	}
 	return
 }
