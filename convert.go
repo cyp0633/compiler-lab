@@ -110,8 +110,8 @@ func (g *Graph) EpsilonClosureSet(stateSet map[int]bool) (ac map[int]bool) {
 }
 
 // 子集构造法的 DTran 函数
-func (g *Graph) DTran(state int) (ac []int) {
-	return
+func (g *Graph) DTran(state map[int]bool, drive int, typ driverType) (ac map[int]bool) {
+	return g.EpsilonClosureSet(g.MoveSet(state, drive, typ))
 }
 
 // 使用子集构造法从 NFA 转换为 DFA
@@ -148,7 +148,7 @@ func (g *Graph) SubsetConstruction() (gNew *Graph) {
 		currNode := <-queue
 		// 遍历每种输入
 		for key := range inputSet {
-			node := g.EpsilonClosureSet(g.MoveSet(*currNode, key.int, key.driverType))
+			node := g.DTran(*currNode, key.int, key.driverType)
 			// 检查 DTran 在新节点表中的新分配序号，不在则 -1
 			nodeInTable := -1
 			for key := range newNodes {
