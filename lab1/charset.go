@@ -1,4 +1,4 @@
-package main
+package lab1
 
 // 字符集
 type Charset struct {

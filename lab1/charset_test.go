@@ -1,4 +1,4 @@
-package main
+package lab1
 
 import (
 	"fmt"
@@ -119,7 +119,7 @@ func TestDifference(t *testing.T) {
 	id3 := difference(id1, 'c')
 	printCharset(id3)
 	// 结果：2 个段，a-b, d-e
-	if len(CharsetTable)!=base+4 || CharsetTable[base+2].FromChar != 'a' || CharsetTable[base+2].ToChar != 'b' || CharsetTable[base+3].FromChar != 'd' || CharsetTable[base+3].ToChar != 'e' {
+	if len(CharsetTable) != base+4 || CharsetTable[base+2].FromChar != 'a' || CharsetTable[base+2].ToChar != 'b' || CharsetTable[base+3].FromChar != 'd' || CharsetTable[base+3].ToChar != 'e' {
 		t.Errorf("Case 2 failed")
 	}
 
@@ -127,7 +127,7 @@ func TestDifference(t *testing.T) {
 	id4 := difference(id1, 'a')
 	printCharset(id4)
 	// 结果：1 个段，b-e
-	if len(CharsetTable)!=base+5 || CharsetTable[base+4].FromChar != 'b' || CharsetTable[base+4].ToChar != 'e' {
+	if len(CharsetTable) != base+5 || CharsetTable[base+4].FromChar != 'b' || CharsetTable[base+4].ToChar != 'e' {
 		t.Errorf("Case 3 failed")
 	}
 }

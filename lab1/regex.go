@@ -1,4 +1,4 @@
-package main
+package lab1
 
 type RegularExpression struct {
 	RegularId int

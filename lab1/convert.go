@@ -1,4 +1,4 @@
-package main
+package lab1
 
 import (
 	"github.com/google/go-cmp/cmp"

@@ -1,4 +1,4 @@
-package main
+package lab1
 
 func main() {
 	testRegex()
@@ -7,13 +7,13 @@ func main() {
 // 测试正则表达式 (a|b)*abb
 func testRegex() {
 	// r1 -> a
-	r1 := generateBasicNFA(DriverChar, 'a')
-	printGraph(r1)
+	r1 := lab1.generateBasicNFA(DriverChar, 'a')
+	lab1.printGraph(r1)
 	// r2 -> b
-	r2 := generateBasicNFA(DriverChar, 'b')
-	printGraph(r2)
+	r2 := lab1.generateBasicNFA(DriverChar, 'b')
+	lab1.printGraph(r2)
 	// r3 -> r1 | r2
-	r3 := unionNFA(r1, r2)
+	r3 := lab1.unionNFA(r1, r2)
 	printGraph(r3)
 	// r4 -> r3*
 	r4 := kleeneClosureNFA(r3)
