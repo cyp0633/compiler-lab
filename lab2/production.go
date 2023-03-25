@@ -58,8 +58,6 @@ type Cell struct {
 // 语法分析表
 var parseTable []*Cell
 
-
-
 func (t symbolType) String() string {
 	switch t {
 	case NonTerminal:
