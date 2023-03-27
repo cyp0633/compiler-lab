@@ -1,6 +1,10 @@
 package lab2
 
-import "compiler-lab/lab1"
+import (
+	"compiler-lab/lab1"
+
+	"github.com/google/go-cmp/cmp"
+)
 
 type Symbol interface{}
 
@@ -160,7 +164,23 @@ func First(s interface{}) (m map[TerminalSymbol]bool) {
 }
 
 // 非终结符的 FOLLOW 函数
-func (nt *NonTerminalSymbol) Follow() {
+func (nt *NonTerminalSymbol) Follow() map[TerminalSymbol]bool {
+	// 如果已经生成过了，就不要再生成了
+	if nt.FollowSet != nil && len(nt.FollowSet) != 0 {
+		return nt.FollowSet
+	}
+
+	// 开始符，加个#
+	if cmp.Equal(nt, RootSymbol) {
+		nt.FollowSet[TerminalSymbol{
+			GrammarSymbol: GrammarSymbol{
+				Name: "#",
+				Type: Terminal,
+			},
+		}] = true
+	}
+	
+	return nt.FollowSet
 }
 
 func (t symbolType) String() string {
