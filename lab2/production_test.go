@@ -1,6 +1,7 @@
 package lab2
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -10,10 +11,10 @@ func TestTypeAssertion(t *testing.T) {
 	s := []interface{}{}
 	s = append(s, &a)
 	for _, v := range s {
-		if _, ok := v.(NonTerminalSymbol); ok {
+		if _, ok := v.(*NonTerminalSymbol); ok {
 			t.Log("ok")
 		} else {
-			t.Fail()
+			t.Error(reflect.TypeOf(v))
 		}
 	}
 }
