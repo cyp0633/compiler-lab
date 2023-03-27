@@ -36,10 +36,10 @@ type NonTerminalSymbol struct {
 
 // 产生式
 type Production struct {
-	ID         int                      // 产生式编号
-	BodySize   int                      // 该产生式的文法符个数
-	BodySymbol []interface{}            // 该产生式的文法符表
-	FirstSet   map[*TerminalSymbol]bool // 该产生式的 First 函数值
+	ID         int                     // 产生式编号
+	BodySize   int                     // 该产生式的文法符个数
+	BodySymbol []interface{}           // 该产生式的文法符表
+	FirstSet   map[TerminalSymbol]bool // 该产生式的 First 函数值
 }
 
 // 文法符表
@@ -69,7 +69,40 @@ var epsilonSymbol = TerminalSymbol{
 
 // 产生式的 FIRST 函数
 func (p *Production) First() map[TerminalSymbol]bool {
-	return nil
+	var symbol interface{}
+	var index int
+	// 遍历整个产生式的文法符，找到第一个非终结符
+	for _, symbol = range p.BodySymbol {
+		// s 是非终结符
+		if st, ok := symbol.(*NonTerminalSymbol); ok {
+			sf := st.First()
+			// 将非终结符的 First 函数值加入该非终结符的 First 函数值
+			for k, v := range sf {
+				p.FirstSet[k] = v
+			}
+			break
+		}
+	}
+
+	// 再次遍历产生式的文法符，找到第一个不可以推导出 epsilon 的非终结符
+	for index, symbol = range p.BodySymbol {
+		sf := First(symbol)
+		// 如果该非终结符的 First 函数值中包含 epsilon，则继续遍历
+		if _, ok := sf[epsilonSymbol]; ok {
+			continue
+		}
+		// 否则将该非终结符的 First 函数值加入该非终结符的 First 函数值
+		for k, v := range sf {
+			p.FirstSet[k] = v
+		}
+		break
+	}
+
+	// 如果上次遍历完发现全是空，就加入 epsilon
+	if index == len(p.BodySymbol)-1 {
+		p.FirstSet[epsilonSymbol] = true
+	}
+	return p.FirstSet
 }
 
 // 非终结符的 FIRST 函数
@@ -87,40 +120,11 @@ func (nt *NonTerminalSymbol) First() map[TerminalSymbol]bool {
 		}
 	}
 
-	// 将每个产生式第一个文法符的非空 First 函数值加入该非终结符的 First 函数值
-	for _, p := range nt.ProductionTable {
-		var symbol interface{}
-		var index int
-		// 遍历整个产生式的文法符，找到第一个非终结符
-		for _, symbol = range p.BodySymbol {
-			// s 是非终结符
-			if st, ok := symbol.(*NonTerminalSymbol); ok {
-				sf := st.First()
-				// 将非终结符的 First 函数值加入该非终结符的 First 函数值
-				for k, v := range sf {
-					nt.FirstSet[k] = v
-				}
-				break
-			}
-		}
-
-		// 再次遍历产生式的文法符，找到第一个不可以推导出 epsilon 的非终结符
-		for index, symbol = range p.BodySymbol {
-			sf := First(symbol)
-			// 如果该非终结符的 First 函数值中包含 epsilon，则继续遍历
-			if _, ok := sf[epsilonSymbol]; ok {
-				continue
-			}
-			// 否则将该非终结符的 First 函数值加入该非终结符的 First 函数值
-			for k, v := range sf {
-				nt.FirstSet[k] = v
-			}
-			break
-		}
-
-		// 如果上次遍历完发现全是空，就加入 epsilon
-		if index == len(p.BodySymbol)-1 {
-			nt.FirstSet[epsilonSymbol] = true
+	// 对每个产生式，调用产生式的 FIRST 函数并合并
+	for _, production := range nt.ProductionTable {
+		pf := production.First()
+		for k, v := range pf {
+			nt.FirstSet[k] = v
 		}
 	}
 	return nt.FirstSet
