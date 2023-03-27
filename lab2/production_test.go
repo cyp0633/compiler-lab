@@ -2,9 +2,142 @@ package lab2
 
 import (
 	"compiler-lab/lab1"
+	"os"
 	"reflect"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	initializeTest1()
+	code := m.Run()
+	os.Exit(code)
+}
+
+var testData1 struct {
+	T, E, E1, T1, F NonTerminalSymbol
+}
+
+func initializeTest1() {
+	// 准备数据
+	// E -> T E'
+	// E' -> + T E' | epsilon
+	// T -> F T'
+	// T' -> * F T' | epsilon
+	// F -> ( E ) | id
+
+	// 非终结符：E E' T T' F
+	testData1.T = NonTerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "T",
+			Type: NonTerminal,
+		},
+		NumOfProduction: 1,
+		ProductionTable: []*Production{},
+	}
+	testData1.E = NonTerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "E",
+			Type: NonTerminal,
+		},
+		NumOfProduction: 1,
+		ProductionTable: []*Production{},
+	}
+	testData1.E1 = NonTerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "E'",
+			Type: NonTerminal,
+		},
+		NumOfProduction: 1,
+		ProductionTable: []*Production{},
+	}
+	testData1.T1 = NonTerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "T'",
+			Type: NonTerminal,
+		},
+		NumOfProduction: 1,
+		ProductionTable: []*Production{},
+	}
+	testData1.F = NonTerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "F",
+			Type: NonTerminal,
+		},
+		NumOfProduction: 1,
+		ProductionTable: []*Production{},
+	}
+
+	// 终结符：+ * ( ) id
+	plus := TerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "+",
+			Type: Terminal,
+		},
+		Category: lab1.LexemeNumericOperator,
+	}
+	mul := TerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "*",
+			Type: Terminal,
+		},
+		Category: lab1.LexemeNumericOperator,
+	}
+	lparen := TerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "(",
+			Type: Terminal,
+		},
+		Category: lab1.LexemeNumericOperator,
+	}
+	rparen := TerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: ")",
+			Type: Terminal,
+		},
+		Category: lab1.LexemeNumericOperator,
+	}
+	id := TerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "id",
+			Type: Terminal,
+		},
+		Category: lab1.LexemeStringConst,
+	}
+
+	// 产生式
+	testData1.E.ProductionTable = append(testData1.E.ProductionTable, &Production{
+		BodySize:   2,
+		BodySymbol: []interface{}{&testData1.T, &testData1.E1},
+	})
+	testData1.E1.ProductionTable = append(testData1.E1.ProductionTable, &Production{
+		BodySize:   3,
+		BodySymbol: []interface{}{&plus, &testData1.T, &testData1.E1},
+	})
+	testData1.E1.ProductionTable = append(testData1.E1.ProductionTable, &Production{
+		BodySize:   0,
+		BodySymbol: []interface{}{},
+	})
+	testData1.T.ProductionTable = append(testData1.T.ProductionTable, &Production{
+		BodySize:   2,
+		BodySymbol: []interface{}{&testData1.F, &testData1.T1},
+	})
+	testData1.T1.ProductionTable = append(testData1.T1.ProductionTable, &Production{
+		BodySize:   3,
+		BodySymbol: []interface{}{&mul, &testData1.F, &testData1.T1},
+	})
+	testData1.T1.ProductionTable = append(testData1.T1.ProductionTable, &Production{
+		BodySize:   0,
+		BodySymbol: []interface{}{},
+	})
+	testData1.F.ProductionTable = append(testData1.F.ProductionTable, &Production{
+		BodySize:   3,
+		BodySymbol: []interface{}{&lparen, &testData1.E, &rparen},
+	})
+	testData1.F.ProductionTable = append(testData1.F.ProductionTable, &Production{
+		BodySize:   1,
+		BodySymbol: []interface{}{&id},
+	})
+}
 
 // 测试类型断言
 func TestTypeAssertion(t *testing.T) {
