@@ -29,8 +29,8 @@ type NonTerminalSymbol struct {
 	GrammarSymbol
 	ProductionTable      []*Production               // 非终结符的产生式表
 	NumOfProduction      int                         // 产生式数量
-	FirstSet             map[*TerminalSymbol]bool    // 该非终结符的 First 函数值
-	FollowSet            map[*TerminalSymbol]bool    // 该非终结符的 Follow 函数值
+	FirstSet             map[TerminalSymbol]bool     // 该非终结符的 First 函数值
+	FollowSet            map[TerminalSymbol]bool     // 该非终结符的 Follow 函数值
 	DependentSetInFollow map[*NonTerminalSymbol]bool // 该非终结符的 Follow 函数中依赖的非终结符
 }
 
@@ -58,6 +58,14 @@ type Cell struct {
 // 语法分析表
 var parseTable []*Cell
 
+// 终结符的 FIRST 函数
+//
+// 其实就是它自己
+func (t *TerminalSymbol) First() (m map[TerminalSymbol]bool) {
+	m = make(map[TerminalSymbol]bool)
+	m[*t] = true
+	return
+}
 func (t symbolType) String() string {
 	switch t {
 	case NonTerminal:
