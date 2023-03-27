@@ -2,6 +2,7 @@ package lab2
 
 import (
 	"compiler-lab/lab1"
+	"reflect"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -47,7 +48,7 @@ type Production struct {
 }
 
 // 文法符表
-var GrammarSymbolTable []*GrammarSymbol
+var GrammarSymbolTable []interface{}
 
 // 开始符
 var RootSymbol *NonTerminalSymbol
@@ -163,24 +164,73 @@ func First(s interface{}) (m map[TerminalSymbol]bool) {
 	}
 }
 
-// 非终结符的 FOLLOW 函数
-func (nt *NonTerminalSymbol) Follow() map[TerminalSymbol]bool {
-	// 如果已经生成过了，就不要再生成了
-	if nt.FollowSet != nil && len(nt.FollowSet) != 0 {
-		return nt.FollowSet
-	}
+// 对所有非终结符求 FOLLOW 集合
+func Follow() {
+	// 找到初始符，加入 #
+	RootSymbol.FollowSet[TerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "#",
+			Type: Terminal,
+		},
+	}] = true
 
-	// 开始符，加个#
-	if cmp.Equal(nt, RootSymbol) {
-		nt.FollowSet[TerminalSymbol{
-			GrammarSymbol: GrammarSymbol{
-				Name: "#",
-				Type: Terminal,
-			},
-		}] = true
+	// 循环，直到 FOLLOW 都不变
+	changed := true
+	for changed {
+		// 遍历每个非终结符，寻找 A
+		for _, A := range GrammarSymbolTable {
+			// 如果不是非终结符，跳过
+			if reflect.TypeOf(A) != reflect.TypeOf(RootSymbol) {
+				continue
+			}
+
+			// 对非终结符 A，遍历每个产生式
+			for _, production := range A.(*NonTerminalSymbol).ProductionTable {
+				// 对每个产生式，找出文法符中的非终结符 B
+				for index, B := range production.BodySymbol {
+					// 如果不是非终结符，跳过
+					if reflect.TypeOf(B) != reflect.TypeOf(RootSymbol) {
+						continue
+					}
+
+					// 先看成 A \Rightarrow \alpha B \beta，求 FIRST(\beta)
+					// 将 \beta 部分组合成一个产生式
+					tempProduction := Production{
+						BodySymbol: production.BodySymbol[index+1:],
+						BodySize:   len(production.BodySymbol[index+1:]),
+					}
+					betaFirst := tempProduction.First()
+
+					// 如果 FIRST(\beta) 中包含 epsilon，或者 \beta 为空
+					// 为 \alpha B 的形式
+					if _, ok := betaFirst[epsilonSymbol]; ok || index == len(production.BodySymbol)-1 {
+						// 则将 FOLLOW(A) 加入 FOLLOW(B)
+						l := len(B.(*NonTerminalSymbol).FollowSet)
+						for k, v := range A.(*NonTerminalSymbol).FollowSet {
+							B.(*NonTerminalSymbol).FollowSet[k] = v
+						}
+						// 监测长度变化，以判断添加
+						if !changed && l != len(B.(*NonTerminalSymbol).FollowSet) {
+							changed = true
+						}
+					} else {
+						// 否则为 \alpha B \beta 的形式
+						// 将 FIRST(\beta)-\epsilon 加入 FOLLOW(B)
+						for k, v := range betaFirst {
+							l := len(B.(*NonTerminalSymbol).FollowSet)
+							if !cmp.Equal(k, epsilonSymbol) {
+								B.(*NonTerminalSymbol).FollowSet[k] = v
+							}
+							// 监测长度变化，以判断添加
+							if !changed && l != len(B.(*NonTerminalSymbol).FollowSet) {
+								changed = true
+							}
+						}
+					}
+				}
+			}
+		}
 	}
-	
-	return nt.FollowSet
 }
 
 func (t symbolType) String() string {
