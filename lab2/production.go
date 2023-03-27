@@ -43,10 +43,10 @@ type Production struct {
 }
 
 // 文法符表
-var grammarSymbolTable []*GrammarSymbol
+var GrammarSymbolTable []*GrammarSymbol
 
 // 开始符
-var rootSymbol *NonTerminalSymbol
+var RootSymbol *NonTerminalSymbol
 
 // 语法分析表项（格子）
 type Cell struct {
@@ -56,7 +56,7 @@ type Cell struct {
 }
 
 // 语法分析表
-var parseTable []*Cell
+var ParseTable []*Cell
 
 // epsilon
 // 看起来要用好多次，就先定义好了
@@ -139,13 +139,13 @@ func (t *TerminalSymbol) First() (m map[TerminalSymbol]bool) {
 //
 // 根据类型推导调用不同的 FIRST
 func First(s interface{}) (m map[TerminalSymbol]bool) {
-	switch s.(type) {
+	switch s := s.(type) {
 	case *Production:
-		return s.(*Production).First()
+		return s.First()
 	case *NonTerminalSymbol:
-		return s.(*NonTerminalSymbol).First()
+		return s.First()
 	case *TerminalSymbol:
-		return s.(*TerminalSymbol).First()
+		return s.First()
 	case *GrammarSymbol:
 		m = make(map[TerminalSymbol]bool)
 		m[epsilonSymbol] = true
@@ -153,7 +153,6 @@ func First(s interface{}) (m map[TerminalSymbol]bool) {
 	default:
 		panic("Unknown type")
 	}
-	return
 }
 
 // 非终结符的 FOLLOW 函数
