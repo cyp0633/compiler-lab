@@ -190,3 +190,13 @@ func TestNonTerminalFirst(t *testing.T) {
 		t.Error("NonTerminal First Error, first1:", first1)
 	}
 }
+
+// 测试两个 String() 函数
+func TestPrettyPrint(t *testing.T) {
+	// E -> T E'
+	prod1 := testData1.E.ProductionTable[0]
+	t.Log(prod1.String())
+	// E'
+	nt1 := testData1.E1
+	t.Log(nt1.String())
+}

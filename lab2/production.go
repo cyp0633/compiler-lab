@@ -260,7 +260,7 @@ func (s *GrammarSymbol) Self() *GrammarSymbol {
 func (s *NonTerminalSymbol) String() (str string) {
 	str += fmt.Sprintf("Nonterminal %v", s.GrammarSymbol.Name)
 	for _, p := range s.ProductionTable {
-		str += "\n" + p.String()
+		str += "\n " + p.String()
 	}
 	str += fmt.Sprintf("\nFirst: %v\nFollow: %v", s.FirstSet, s.FollowSet)
 	return
@@ -269,8 +269,16 @@ func (s *NonTerminalSymbol) String() (str string) {
 func (p *Production) String() (str string) {
 	str += "->"
 	for _, v := range p.BodySymbol {
-		v := v.(*GrammarSymbol)
-		str += v.Name + " "
+		switch v := v.(type) {
+		case *GrammarSymbol:
+			str += fmt.Sprintf(" %v", v.Name)
+		case *NonTerminalSymbol:
+			str += fmt.Sprintf(" %v", v.Name)
+		case *TerminalSymbol:
+			str += fmt.Sprintf(" %v", v.Name)
+		default:
+			panic("Unknown type")
+		}
 	}
 	str += fmt.Sprintf("(ID: %v)", p.ID)
 	return
