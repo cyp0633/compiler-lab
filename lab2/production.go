@@ -35,17 +35,17 @@ type NonTerminalSymbol struct {
 	GrammarSymbol
 	ProductionTable      []*Production               // 非终结符的产生式表
 	NumOfProduction      int                         // 产生式数量
-	FirstSet             map[TerminalSymbol]bool     // 该非终结符的 First 函数值
-	FollowSet            map[TerminalSymbol]bool     // 该非终结符的 Follow 函数值
+	FirstSet             map[interface{}]bool        // 该非终结符的 First 函数值
+	FollowSet            map[interface{}]bool        // 该非终结符的 Follow 函数值
 	DependentSetInFollow map[*NonTerminalSymbol]bool // 该非终结符的 Follow 函数中依赖的非终结符
 }
 
 // 产生式
 type Production struct {
-	ID         int                     // 产生式编号
-	BodySize   int                     // 该产生式的文法符个数
-	BodySymbol []interface{}           // 该产生式的文法符表
-	FirstSet   map[TerminalSymbol]bool // 该产生式的 First 函数值
+	ID         int                  // 产生式编号
+	BodySize   int                  // 该产生式的文法符个数
+	BodySymbol []interface{}        // 该产生式的文法符表
+	FirstSet   map[interface{}]bool // 该产生式的 First 函数值
 }
 
 // 文法符表
@@ -64,35 +64,41 @@ type Cell struct {
 // 语法分析表
 var ParseTable []*Cell
 
-// epsilon
+// epsilon 不属于非终结符，也不属于终结符！！！
 // 看起来要用好多次，就先定义好了
-var epsilonSymbol = TerminalSymbol{
-	GrammarSymbol: GrammarSymbol{
-		Name: "epsilon",
-		Type: Null,
-	},
+var epsilonSymbol = GrammarSymbol{
+	Name: "epsilon",
+	Type: Null,
 }
 
 // 产生式的 FIRST 函数
-func (p *Production) First() map[TerminalSymbol]bool {
+func (p *Production) First() map[interface{}]bool {
 	var symbol interface{}
 	var index int
+	p.FirstSet = make(map[interface{}]bool)
 
 	// 只有 epsilon，就直接返回
 	if p.BodySize == 1 && cmp.Equal(p.BodySymbol[0], &epsilonSymbol) {
-		return map[TerminalSymbol]bool{epsilonSymbol: true}
+		return map[interface{}]bool{epsilonSymbol: true}
 	}
 
-	// 遍历整个产生式的文法符，找到第一个非终结符
+	// 遍历整个产生式的文法符，找到第一个非终结符……或终结符
+prod:
 	for _, symbol = range p.BodySymbol {
+		switch symbol := symbol.(type) {
 		// s 是非终结符
-		if st, ok := symbol.(*NonTerminalSymbol); ok {
-			sf := st.First()
+		case *NonTerminalSymbol:
+			sf := symbol.First()
 			// 将非终结符的 First 函数值加入该非终结符的 First 函数值
 			for k, v := range sf {
 				p.FirstSet[k] = v
 			}
-			break
+			break prod
+		// s 是终结符
+		case *TerminalSymbol:
+			// 直接将其作为 FIRST 函数值返回
+			p.FirstSet[*symbol] = true
+			return p.FirstSet
 		}
 	}
 
@@ -118,17 +124,21 @@ func (p *Production) First() map[TerminalSymbol]bool {
 }
 
 // 非终结符的 FIRST 函数
-func (nt *NonTerminalSymbol) First() map[TerminalSymbol]bool {
+func (nt *NonTerminalSymbol) First() map[interface{}]bool {
 	// 如果已经生成过了，就不要再生成了
 	if nt.FirstSet != nil && len(nt.FirstSet) != 0 {
 		return nt.FirstSet
 	}
+	nt.FirstSet = make(map[interface{}]bool)
 
 	// 寻找 epsilon 的产生式（仅含 epsilon）
 	for _, p := range nt.ProductionTable {
-		if p.BodySize == 1 && p.BodySymbol[0].(*GrammarSymbol).Type == Null {
-			// 如果存在将 epsilon 加入该非终结符的 First 函数值
-			nt.FirstSet[epsilonSymbol] = true
+		if p.BodySize == 1 {
+			symbol, ok := p.BodySymbol[0].(*GrammarSymbol)
+			if ok && symbol.Type == Null { // 为什么不能放到一个 if 里啊！！！
+				// 如果存在将 epsilon 加入该非终结符的 First 函数值
+				nt.FirstSet[epsilonSymbol] = true
+			}
 		}
 	}
 
@@ -145,8 +155,8 @@ func (nt *NonTerminalSymbol) First() map[TerminalSymbol]bool {
 // 终结符的 FIRST 函数
 //
 // 其实就是它自己
-func (t *TerminalSymbol) First() (m map[TerminalSymbol]bool) {
-	m = make(map[TerminalSymbol]bool)
+func (t *TerminalSymbol) First() (m map[interface{}]bool) {
+	m = make(map[interface{}]bool)
 	m[*t] = true
 	return
 }
@@ -154,7 +164,7 @@ func (t *TerminalSymbol) First() (m map[TerminalSymbol]bool) {
 // 所有语法符的 FIRST 函数
 //
 // 根据类型推导调用不同的 FIRST
-func First(s interface{}) (m map[TerminalSymbol]bool) {
+func First(s interface{}) (m map[interface{}]bool) {
 	switch s := s.(type) {
 	case *Production:
 		return s.First()
@@ -163,7 +173,7 @@ func First(s interface{}) (m map[TerminalSymbol]bool) {
 	case *TerminalSymbol:
 		return s.First()
 	case *GrammarSymbol:
-		m = make(map[TerminalSymbol]bool)
+		m = make(map[interface{}]bool)
 		m[epsilonSymbol] = true
 		return
 	default:
