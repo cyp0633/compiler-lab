@@ -14,7 +14,8 @@ func TestMain(m *testing.M) {
 }
 
 var testData1 struct {
-	T, E, E1, T1, F NonTerminalSymbol
+	T, E, E1, T1, F               NonTerminalSymbol
+	plus, mul, lparen, rparen, id TerminalSymbol
 }
 
 func initializeTest1() {
@@ -68,35 +69,35 @@ func initializeTest1() {
 	}
 
 	// 终结符：+ * ( ) id
-	plus := TerminalSymbol{
+	testData1.plus = TerminalSymbol{
 		GrammarSymbol: GrammarSymbol{
 			Name: "+",
 			Type: Terminal,
 		},
 		Category: lab1.LexemeNumericOperator,
 	}
-	mul := TerminalSymbol{
+	testData1.mul = TerminalSymbol{
 		GrammarSymbol: GrammarSymbol{
 			Name: "*",
 			Type: Terminal,
 		},
 		Category: lab1.LexemeNumericOperator,
 	}
-	lparen := TerminalSymbol{
+	testData1.lparen = TerminalSymbol{
 		GrammarSymbol: GrammarSymbol{
 			Name: "(",
 			Type: Terminal,
 		},
 		Category: lab1.LexemeNumericOperator,
 	}
-	rparen := TerminalSymbol{
+	testData1.rparen = TerminalSymbol{
 		GrammarSymbol: GrammarSymbol{
 			Name: ")",
 			Type: Terminal,
 		},
 		Category: lab1.LexemeNumericOperator,
 	}
-	id := TerminalSymbol{
+	testData1.id = TerminalSymbol{
 		GrammarSymbol: GrammarSymbol{
 			Name: "id",
 			Type: Terminal,
@@ -111,7 +112,7 @@ func initializeTest1() {
 	})
 	testData1.E1.ProductionTable = append(testData1.E1.ProductionTable, &Production{
 		BodySize:   3,
-		BodySymbol: []interface{}{&plus, &testData1.T, &testData1.E1},
+		BodySymbol: []interface{}{&testData1.plus, &testData1.T, &testData1.E1},
 	})
 	testData1.E1.ProductionTable = append(testData1.E1.ProductionTable, &Production{
 		BodySize:   1,
@@ -123,7 +124,7 @@ func initializeTest1() {
 	})
 	testData1.T1.ProductionTable = append(testData1.T1.ProductionTable, &Production{
 		BodySize:   3,
-		BodySymbol: []interface{}{&mul, &testData1.F, &testData1.T1},
+		BodySymbol: []interface{}{&testData1.mul, &testData1.F, &testData1.T1},
 	})
 	testData1.T1.ProductionTable = append(testData1.T1.ProductionTable, &Production{
 		BodySize:   1,
@@ -131,11 +132,11 @@ func initializeTest1() {
 	})
 	testData1.F.ProductionTable = append(testData1.F.ProductionTable, &Production{
 		BodySize:   3,
-		BodySymbol: []interface{}{&lparen, &testData1.E, &rparen},
+		BodySymbol: []interface{}{&testData1.lparen, &testData1.E, &testData1.rparen},
 	})
 	testData1.F.ProductionTable = append(testData1.F.ProductionTable, &Production{
 		BodySize:   1,
-		BodySymbol: []interface{}{&id},
+		BodySymbol: []interface{}{&testData1.id},
 	})
 }
 
@@ -176,5 +177,16 @@ func TestProductionFirst(t *testing.T) {
 	first1 := prod1.First()
 	if len(first1) != 1 || first1[epsilonSymbol] != true {
 		t.Error("Production First Error, first1:", first1)
+	}
+}
+
+// 测试非终结符的 FIRST 函数
+func TestNonTerminalFirst(t *testing.T) {
+	// F -> ( E ) | id
+	nt1 := testData1.F
+	first1 := nt1.First()
+	// { (, id }
+	if len(first1) != 2 || first1[testData1.lparen] != true || first1[testData1.id] != true {
+		t.Error("NonTerminal First Error, first1:", first1)
 	}
 }
