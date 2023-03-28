@@ -114,8 +114,8 @@ func initializeTest1() {
 		BodySymbol: []interface{}{&plus, &testData1.T, &testData1.E1},
 	})
 	testData1.E1.ProductionTable = append(testData1.E1.ProductionTable, &Production{
-		BodySize:   0,
-		BodySymbol: []interface{}{},
+		BodySize:   1,
+		BodySymbol: []interface{}{&epsilonSymbol},
 	})
 	testData1.T.ProductionTable = append(testData1.T.ProductionTable, &Production{
 		BodySize:   2,
@@ -126,8 +126,8 @@ func initializeTest1() {
 		BodySymbol: []interface{}{&mul, &testData1.F, &testData1.T1},
 	})
 	testData1.T1.ProductionTable = append(testData1.T1.ProductionTable, &Production{
-		BodySize:   0,
-		BodySymbol: []interface{}{},
+		BodySize:   1,
+		BodySymbol: []interface{}{&epsilonSymbol},
 	})
 	testData1.F.ProductionTable = append(testData1.F.ProductionTable, &Production{
 		BodySize:   3,

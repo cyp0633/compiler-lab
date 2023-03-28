@@ -76,6 +76,12 @@ var epsilonSymbol = TerminalSymbol{
 func (p *Production) First() map[TerminalSymbol]bool {
 	var symbol interface{}
 	var index int
+
+	// 只有 epsilon，就直接返回
+	if p.BodySize == 1 && cmp.Equal(p.BodySymbol[0], &epsilonSymbol) {
+		return map[TerminalSymbol]bool{epsilonSymbol: true}
+	}
+
 	// 遍历整个产生式的文法符，找到第一个非终结符
 	for _, symbol = range p.BodySymbol {
 		// s 是非终结符
