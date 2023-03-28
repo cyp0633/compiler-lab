@@ -178,6 +178,16 @@ func TestProductionFirst(t *testing.T) {
 	if len(first1) != 1 || first1[epsilonSymbol] != true {
 		t.Error("Production First Error, first1:", first1)
 	}
+
+	// E' -> + T E'
+	prod2 := testData1.E1.ProductionTable[0]
+	first2 := prod2.First()
+	// { + }
+	if len(first2) != 1 || first2[testData1.plus] != true {
+		t.Error("Production First Error, first2:", first2)
+	}
+
+	// 这里就不放更多 case 了，[TestNonTerminalFirst] 里面有更多的 case
 }
 
 // 测试非终结符的 FIRST 函数
@@ -189,6 +199,39 @@ func TestNonTerminalFirst(t *testing.T) {
 	if len(first1) != 2 || first1[testData1.lparen] != true || first1[testData1.id] != true {
 		t.Error("NonTerminal First Error, first1:", first1)
 	}
+
+	// E -> T E'
+	nt2 := testData1.E
+	first2 := nt2.First()
+	// { (, id }
+	if len(first2) != 2 || first2[testData1.lparen] != true || first2[testData1.id] != true {
+		t.Error("NonTerminal First Error, first2:", first2)
+	}
+
+	// E' -> + T E' | epsilon
+	nt3 := testData1.E1
+	first3 := nt3.First()
+	// { +, epsilon }
+	if len(first3) != 2 || first3[testData1.plus] != true || first3[epsilonSymbol] != true {
+		t.Error("NonTerminal First Error, first3:", first3)
+	}
+
+	// T -> F T'
+	nt4 := testData1.T
+	first4 := nt4.First()
+	// { (, id }
+	if len(first4) != 2 || first4[testData1.lparen] != true || first4[testData1.id] != true {
+		t.Error("NonTerminal First Error, first4:", first4)
+	}
+
+	// T' -> * F T' | epsilon
+	nt5 := testData1.T1
+	first5 := nt5.First()
+	// { *, epsilon }
+	if len(first5) != 2 || first5[testData1.mul] != true || first5[epsilonSymbol] != true {
+		t.Error("NonTerminal First Error, first5:", first5)
+	}
+
 }
 
 // 测试两个 String() 函数
