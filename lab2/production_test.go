@@ -168,3 +168,13 @@ func TestTerminalFirst(t *testing.T) {
 		t.Error("Terminal First Error")
 	}
 }
+
+// 测试产生式的 FIRST 函数
+func TestProductionFirst(t *testing.T) {
+	// E' -> epsilon
+	prod1 := testData1.E1.ProductionTable[1]
+	first1 := prod1.First()
+	if len(first1) != 1 || first1[epsilonSymbol] != true {
+		t.Error("Production First Error, first1:", first1)
+	}
+}
