@@ -2,6 +2,7 @@ package lab2
 
 import (
 	"compiler-lab/lab1"
+	"fmt"
 	"reflect"
 
 	"github.com/google/go-cmp/cmp"
@@ -254,4 +255,23 @@ func (t symbolType) String() string {
 
 func (s *GrammarSymbol) Self() *GrammarSymbol {
 	return s
+}
+
+func (s *NonTerminalSymbol) String() (str string) {
+	str += fmt.Sprintf("Nonterminal %v", s.GrammarSymbol.Name)
+	for _, p := range s.ProductionTable {
+		str += "\n" + p.String()
+	}
+	str += fmt.Sprintf("\nFirst: %v\nFollow: %v", s.FirstSet, s.FollowSet)
+	return
+}
+
+func (p *Production) String() (str string) {
+	str += "->"
+	for _, v := range p.BodySymbol {
+		v := v.(*GrammarSymbol)
+		str += v.Name + " "
+	}
+	str += fmt.Sprintf("(ID: %v)", p.ID)
+	return
 }
