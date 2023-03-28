@@ -8,8 +8,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-type Symbol interface{}
-
 // 文法符
 type GrammarSymbol struct {
 	Name string     // 符号名
@@ -49,7 +47,7 @@ type Production struct {
 }
 
 // 文法符表
-var GrammarSymbolTable []interface{}
+var GrammarSymbolTable = []interface{}{}
 
 // 开始符
 var RootSymbol *NonTerminalSymbol
@@ -62,7 +60,7 @@ type Cell struct {
 }
 
 // 语法分析表
-var ParseTable []*Cell
+var ParseTable []*Cell = []*Cell{}
 
 // epsilon 不属于非终结符，也不属于终结符！！！
 // 看起来要用好多次，就先定义好了
@@ -97,8 +95,7 @@ prod:
 		// s 是终结符
 		case *TerminalSymbol:
 			// 直接将其作为 FIRST 函数值返回
-			p.FirstSet[*symbol] = true
-			return p.FirstSet
+			return symbol.First()
 		}
 	}
 
@@ -183,6 +180,15 @@ func First(s interface{}) (m map[interface{}]bool) {
 
 // 对所有非终结符求 FOLLOW 集合
 func Follow() {
+	// 初始化 FOLLOW 集合
+	for _, A := range GrammarSymbolTable {
+		// 如果不是非终结符，跳过
+		if reflect.TypeOf(A) != reflect.TypeOf(RootSymbol) {
+			continue
+		}
+		A.(*NonTerminalSymbol).FollowSet = make(map[interface{}]bool)
+	}
+
 	// 找到初始符，加入 #
 	RootSymbol.FollowSet[TerminalSymbol{
 		GrammarSymbol: GrammarSymbol{
@@ -194,8 +200,10 @@ func Follow() {
 	// 循环，直到 FOLLOW 都不变
 	changed := true
 	for changed {
+		changed = false
 		// 遍历每个非终结符，寻找 A
-		for _, A := range GrammarSymbolTable {
+		for index, A := range GrammarSymbolTable {
+			fmt.Printf("index = %d, A :\n%s\n", index, A)
 			// 如果不是非终结符，跳过
 			if reflect.TypeOf(A) != reflect.TypeOf(RootSymbol) {
 				continue
