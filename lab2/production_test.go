@@ -227,11 +227,54 @@ func TestNonTerminalFirst(t *testing.T) {
 	// T' -> * F T' | epsilon
 	nt5 := testData1.T1
 	first5 := nt5.First()
+	// 重复，试试会不会出错
+	first51 := nt5.First()
 	// { *, epsilon }
 	if len(first5) != 2 || first5[testData1.mul] != true || first5[epsilonSymbol] != true {
 		t.Error("NonTerminal First Error, first5:", first5)
 	}
+	if len(first51) != 2 || first51[testData1.mul] != true || first51[epsilonSymbol] != true {
+		t.Error("NonTerminal First Error, first51:", first51)
+	}
 
+}
+
+// 测试所有非终结符的 FOLLOW 函数
+func TestAllFollow(t *testing.T) {
+	GrammarSymbolTable = append(GrammarSymbolTable, &testData1.E, &testData1.E1, &testData1.T, &testData1.T1, &testData1.F)
+	GrammarSymbolTable = append(GrammarSymbolTable, &testData1.lparen, &testData1.rparen, &testData1.plus, &testData1.mul, &testData1.id)
+	RootSymbol = &testData1.E
+	Follow()
+
+	// FOLLOW(E) = { #, ) }
+	follow1 := testData1.E.FollowSet
+	if len(follow1) != 2 || follow1[testData1.rparen] != true {
+		t.Error("Follow Error, follow1:", follow1)
+	}
+
+	// FOLLOW(E') = { #, ) }
+	follow2 := testData1.E1.FollowSet
+	if len(follow2) != 2 || follow2[testData1.rparen] != true {
+		t.Error("Follow Error, follow2:", follow2)
+	}
+
+	// FOLLOW(T) = { +, #, ) }
+	follow3 := testData1.T.FollowSet
+	if len(follow3) != 3 || follow3[testData1.plus] != true || follow3[testData1.rparen] != true {
+		t.Error("Follow Error, follow3:", follow3)
+	}
+
+	// FOLLOW(T') = { +, #, ) }
+	follow4 := testData1.T1.FollowSet
+	if len(follow4) != 3 || follow4[testData1.plus] != true || follow4[testData1.rparen] != true {
+		t.Error("Follow Error, follow4:", follow4)
+	}
+
+	// FOLLOW(F) = { *, +, #, ) }
+	follow5 := testData1.F.FollowSet
+	if len(follow5) != 4 || follow5[testData1.mul] != true || follow5[testData1.plus] != true || follow5[testData1.rparen] != true {
+		t.Error("Follow Error, follow5:", follow5)
+	}
 }
 
 // 测试两个 String() 函数
