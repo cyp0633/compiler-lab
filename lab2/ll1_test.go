@@ -12,6 +12,11 @@ var leftFactorExample struct {
 	If, Then, Else, Other TerminalSymbol
 }
 
+var ll1Example struct {
+	S, A NonTerminalSymbol
+	a, b TerminalSymbol
+}
+
 func initLeftRecursionExample() {
 	// 	S -> S + T | T
 	// T -> T * F | F
@@ -168,6 +173,66 @@ func initLeftFactorExample() {
 	})
 }
 
+func initLL1Example() {
+	// S -> a A S
+	// S -> b
+	// A -> b A | \epsilon
+
+	// nonterminal: S A
+	ll1Example.S = NonTerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "S",
+			Type: NonTerminal,
+		},
+		NumOfProduction: 2,
+		ProductionTable: []*Production{},
+	}
+	ll1Example.A = NonTerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "A",
+			Type: NonTerminal,
+		},
+		NumOfProduction: 2,
+		ProductionTable: []*Production{},
+	}
+
+	// terminal: a b
+	ll1Example.a = TerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "a",
+			Type: Terminal,
+		},
+	}
+	ll1Example.b = TerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "b",
+			Type: Terminal,
+		},
+	}
+
+	// productions
+	// S -> a A S
+	ll1Example.S.ProductionTable = append(ll1Example.S.ProductionTable, &Production{
+		BodySize:   3,
+		BodySymbol: []interface{}{&ll1Example.a, &ll1Example.A, &ll1Example.S},
+	})
+	// S -> b
+	ll1Example.S.ProductionTable = append(ll1Example.S.ProductionTable, &Production{
+		BodySize:   1,
+		BodySymbol: []interface{}{&ll1Example.b},
+	})
+	// A -> b A
+	ll1Example.A.ProductionTable = append(ll1Example.A.ProductionTable, &Production{
+		BodySize:   2,
+		BodySymbol: []interface{}{&ll1Example.b, &ll1Example.A},
+	})
+	// A -> \epsilon
+	ll1Example.A.ProductionTable = append(ll1Example.A.ProductionTable, &Production{
+		BodySize:   0,
+		BodySymbol: []interface{}{},
+	})
+}
+
 // 检测左递归测试
 func TestCheckLeftRecursion(t *testing.T) {
 	GrammarSymbolTable = []interface{}{&leftRecursionExample.S, &leftRecursionExample.T, &leftRecursionExample.F, &leftRecursionExample.plus, &leftRecursionExample.mul, &leftRecursionExample.lb, &leftRecursionExample.rb, &leftRecursionExample.id}
@@ -206,5 +271,14 @@ func TestCheckLeftFactor(t *testing.T) {
 	test2 := testData1.E.LeftFactored()
 	if test2 {
 		t.Error("TestCheckLeftFactor failed")
+	}
+}
+
+func TestCheckLL1(t *testing.T) {
+	GrammarSymbolTable = []interface{}{&ll1Example.S, &ll1Example.A, &ll1Example.a, &ll1Example.b}
+	RootSymbol = &ll1Example.S
+
+	if CheckLL1() {
+		t.Error("TestCheckLL1 failed")
 	}
 }

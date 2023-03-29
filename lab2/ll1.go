@@ -1,6 +1,8 @@
 package lab2
 
-import "github.com/google/go-cmp/cmp"
+import (
+	"github.com/google/go-cmp/cmp"
+)
 
 // 消除左递归
 //
@@ -141,4 +143,54 @@ func (s *NonTerminalSymbol) LeftFactored() bool {
 		}
 	}
 	return false
+}
+
+// 判断是否是 LL(1) 文法
+func CheckLL1() bool {
+	// 检测左递归
+	if CheckLeftRecursion() {
+		return false
+	}
+
+	// 检测左因子
+	for _, symbol := range GrammarSymbolTable {
+		if nt, ok := symbol.(*NonTerminalSymbol); ok {
+			if nt.LeftFactored() {
+				return false
+			}
+		}
+	}
+
+	// 检测 FIRST 集是否有交集
+	for _, symbol1 := range GrammarSymbolTable {
+		for _, symbol2 := range GrammarSymbolTable {
+			if symbol2 == symbol1 {
+				continue
+			}
+
+			nt1, ok1 := symbol1.(*NonTerminalSymbol)
+			nt2, ok2 := symbol2.(*NonTerminalSymbol)
+			if !ok1 || !ok2 {
+				continue
+			}
+
+			result := intersectMaps(nt1.First(), nt2.First())
+			if len(result) > 0 {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func intersectMaps[T comparable, U any](map1 map[T]U, map2 map[T]U) map[T]U {
+	result := make(map[T]U)
+
+	for key1 := range map1 {
+		if _, ok := map2[key1]; ok {
+			result[key1] = map1[key1]
+		}
+	}
+
+	return result
 }
