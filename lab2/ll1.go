@@ -121,6 +121,24 @@ func ExtractLeftFactor() {
 }
 
 // 检测左因子
-func CheckLeftFactor() (ret bool) {
-	return
+func (s *NonTerminalSymbol) LeftFactored() bool {
+	m := map[string]bool{}
+	name := ""
+	for _, production := range s.ProductionTable {
+		for _, symbol := range production.BodySymbol {
+			switch symbol := symbol.(type) {
+			case *TerminalSymbol:
+				name = symbol.Name
+			case *NonTerminalSymbol:
+				name = symbol.Name
+			case *GrammarSymbol:
+				name = symbol.Name
+			}
+			if m[name] {
+				return true
+			}
+			m[name] = true
+		}
+	}
+	return false
 }

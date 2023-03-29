@@ -7,6 +7,11 @@ var leftRecursionExample struct {
 	plus, mul, lb, rb, id TerminalSymbol
 }
 
+var leftFactorExample struct {
+	S, E                  NonTerminalSymbol
+	If, Then, Else, Other TerminalSymbol
+}
+
 func initLeftRecursionExample() {
 	// 	S -> S + T | T
 	// T -> T * F | F
@@ -100,6 +105,70 @@ func initLeftRecursionExample() {
 	})
 }
 
+func initLeftFactorExample() {
+	// S -> if E then S | if E then S else S | Other
+
+	// nonterminal: S E
+	leftFactorExample.S = NonTerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "S",
+			Type: NonTerminal,
+		},
+		NumOfProduction: 3,
+		ProductionTable: []*Production{},
+	}
+	leftFactorExample.E = NonTerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "E",
+			Type: NonTerminal,
+		},
+		NumOfProduction: 1,
+		ProductionTable: []*Production{},
+	}
+
+	// terminal: if then else Other
+	leftFactorExample.If = TerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "if",
+			Type: Terminal,
+		},
+	}
+	leftFactorExample.Then = TerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "then",
+			Type: Terminal,
+		},
+	}
+	leftFactorExample.Else = TerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "else",
+			Type: Terminal,
+		},
+	}
+	leftFactorExample.Other = TerminalSymbol{
+		GrammarSymbol: GrammarSymbol{
+			Name: "Other",
+			Type: Terminal,
+		},
+	}
+
+	// productions
+	// S -> if E then S | if E then S else S | Other
+	leftFactorExample.S.ProductionTable = append(leftFactorExample.S.ProductionTable, &Production{
+		BodySize:   4,
+		BodySymbol: []interface{}{&leftFactorExample.If, &leftFactorExample.E, &leftFactorExample.Then, &leftFactorExample.S},
+	})
+	leftFactorExample.S.ProductionTable = append(leftFactorExample.S.ProductionTable, &Production{
+		BodySize:   6,
+		BodySymbol: []interface{}{&leftFactorExample.If, &leftFactorExample.E, &leftFactorExample.Then, &leftFactorExample.S, &leftFactorExample.Else, &leftFactorExample.S},
+	})
+	leftFactorExample.S.ProductionTable = append(leftFactorExample.S.ProductionTable, &Production{
+		BodySize:   1,
+		BodySymbol: []interface{}{&leftFactorExample.Other},
+	})
+}
+
+// 检测左递归测试
 func TestCheckLeftRecursion(t *testing.T) {
 	GrammarSymbolTable = []interface{}{&leftRecursionExample.S, &leftRecursionExample.T, &leftRecursionExample.F, &leftRecursionExample.plus, &leftRecursionExample.mul, &leftRecursionExample.lb, &leftRecursionExample.rb, &leftRecursionExample.id}
 	RootSymbol = &leftRecursionExample.S
@@ -124,5 +193,18 @@ func TestEliminateRecursion(t *testing.T) {
 
 	if CheckLeftRecursion() {
 		t.Error("TestEliminateRecursion failed")
+	}
+}
+
+// 检测左因子测试
+func TestCheckLeftFactor(t *testing.T) {
+	test1 := leftFactorExample.S.LeftFactored()
+	if !test1 {
+		t.Error("TestCheckLeftFactor failed")
+	}
+
+	test2 := testData1.E.LeftFactored()
+	if test2 {
+		t.Error("TestCheckLeftFactor failed")
 	}
 }
