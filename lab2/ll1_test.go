@@ -115,3 +115,14 @@ func TestCheckLeftRecursion(t *testing.T) {
 		t.Error("TestCheckLeftRecursion failed")
 	}
 }
+
+func TestEliminateRecursion(t *testing.T) {
+	GrammarSymbolTable = []interface{}{&leftRecursionExample.S, &leftRecursionExample.T, &leftRecursionExample.F, &leftRecursionExample.plus, &leftRecursionExample.mul, &leftRecursionExample.lb, &leftRecursionExample.rb, &leftRecursionExample.id}
+	RootSymbol = &leftRecursionExample.S
+
+	LeftRecursionElimination()
+
+	if CheckLeftRecursion() {
+		t.Error("TestEliminateRecursion failed")
+	}
+}

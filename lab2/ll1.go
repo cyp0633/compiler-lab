@@ -53,7 +53,9 @@ func LeftRecursionElimination() {
 		// 有左递归，加入新的非终结符
 		GrammarSymbolTable = append(GrammarSymbolTable, newSymbol)
 		// 遍历 ai 的产生式
-		for index, prod := range ai.ProductionTable {
+		// 有删除行为，所以不能使用 range
+		for index := 0; index < len(ai.ProductionTable); index++ {
+			prod := ai.ProductionTable[index]
 			// 对于有左递归的产生式 ai -> ai \alpha，删除，加入 ai' -> \alpha ai'
 			if len(prod.BodySymbol) > 0 && cmp.Equal(prod.BodySymbol[0], ai) {
 				ai.ProductionTable = append(ai.ProductionTable[:index], ai.ProductionTable[index+1:]...)
@@ -62,6 +64,7 @@ func LeftRecursionElimination() {
 				}
 				newProduction.BodySize = len(newProduction.BodySymbol)
 				newSymbol.ProductionTable = append(newSymbol.ProductionTable, newProduction)
+				index--
 			} else {
 				// 对于没有左递归的产生式 ai -> \beta，替换为 ai -> \beta ai'
 				newProduction := &Production{
