@@ -9,6 +9,7 @@ import (
 
 func TestMain(m *testing.M) {
 	initializeTest1()
+	initLeftRecursionExample()
 	code := m.Run()
 	os.Exit(code)
 }

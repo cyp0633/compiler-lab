@@ -225,7 +225,24 @@ func Follow() {
 						BodySize:   len(production.BodySymbol[index+1:]),
 					}
 					betaFirst := tempProduction.First()
+					
+					// 规则 2
+					// 对于任何 \alpha B \beta 的形式
+					if index != len(production.BodySymbol)-1 {
+						// 将 FIRST(\beta)-\epsilon 加入 FOLLOW(B)
+						for k, v := range betaFirst {
+							l := len(B.(*NonTerminalSymbol).FollowSet)
+							if !cmp.Equal(k, epsilonSymbol) {
+								B.(*NonTerminalSymbol).FollowSet[k] = v
+							}
+							// 监测长度变化，以判断添加
+							if !changed && l != len(B.(*NonTerminalSymbol).FollowSet) {
+								changed = true
+							}
+						}
+					}
 
+					// 规则 3
 					// 如果 FIRST(\beta) 中包含 epsilon，或者 \beta 为空
 					// 为 \alpha B 的形式
 					if _, ok := betaFirst[epsilonSymbol]; ok || index == len(production.BodySymbol)-1 {
@@ -237,19 +254,6 @@ func Follow() {
 						// 监测长度变化，以判断添加
 						if !changed && l != len(B.(*NonTerminalSymbol).FollowSet) {
 							changed = true
-						}
-					} else {
-						// 否则为 \alpha B \beta 的形式
-						// 将 FIRST(\beta)-\epsilon 加入 FOLLOW(B)
-						for k, v := range betaFirst {
-							l := len(B.(*NonTerminalSymbol).FollowSet)
-							if !cmp.Equal(k, epsilonSymbol) {
-								B.(*NonTerminalSymbol).FollowSet[k] = v
-							}
-							// 监测长度变化，以判断添加
-							if !changed && l != len(B.(*NonTerminalSymbol).FollowSet) {
-								changed = true
-							}
 						}
 					}
 				}
