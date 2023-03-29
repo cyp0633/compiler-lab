@@ -202,8 +202,7 @@ func Follow() {
 	for changed {
 		changed = false
 		// 遍历每个非终结符，寻找 A
-		for index, A := range GrammarSymbolTable {
-			fmt.Printf("index = %d, A :\n%s\n", index, A)
+		for _, A := range GrammarSymbolTable {
 			// 如果不是非终结符，跳过
 			if reflect.TypeOf(A) != reflect.TypeOf(RootSymbol) {
 				continue
@@ -225,7 +224,7 @@ func Follow() {
 						BodySize:   len(production.BodySymbol[index+1:]),
 					}
 					betaFirst := tempProduction.First()
-					
+
 					// 规则 2
 					// 对于任何 \alpha B \beta 的形式
 					if index != len(production.BodySymbol)-1 {

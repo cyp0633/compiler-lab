@@ -11,7 +11,7 @@ func CheckLeftRecursion() (ret bool) {
 }
 
 // 使用 DFS 检测左递归，rec 用于记录已经检测过的非终结符
-func checkLeftRecursion(rec map[string]bool, curr *NonTerminalSymbol) (ret bool) {
+func checkLeftRecursion(rec map[string]bool, curr *NonTerminalSymbol) bool {
 	// 如果已经检测过，返回
 	if rec[curr.Name] {
 		return true
@@ -26,10 +26,12 @@ func checkLeftRecursion(rec map[string]bool, curr *NonTerminalSymbol) (ret bool)
 		}
 		// 是非终结符
 		if symbol, ok := production.BodySymbol[0].(*NonTerminalSymbol); ok {
-			ret = ret || checkLeftRecursion(rec, symbol)
+			if checkLeftRecursion(rec, symbol) {
+				return true
+			}
 		}
 	}
-	return
+	return false
 }
 
 // 提取左因子
