@@ -1,8 +1,87 @@
 package lab2
 
-// 消除左递归
-func LeftRecursionElimination() {
+import "github.com/google/go-cmp/cmp"
 
+// 消除左递归
+//
+// 使用之前应当先检测左递归
+func LeftRecursionElimination() {
+	// 遍历非终结符
+	for i := 0; i < len(GrammarSymbolTable); i++ {
+		ai, ok := GrammarSymbolTable[i].(*NonTerminalSymbol)
+		if !ok {
+			continue
+		}
+		for j := 0; j < i; j++ {
+			aj, ok := GrammarSymbolTable[j].(*NonTerminalSymbol)
+			if !ok {
+				continue
+			}
+			// 找到 ai -> aj \gamma
+			for index, production := range ai.ProductionTable {
+				if len(production.BodySymbol) > 0 && cmp.Equal(production.BodySymbol[0], aj) {
+					// 对于每个 aj -> \delta
+					for _, production2 := range aj.ProductionTable {
+						// 加入 ai -> \delta \gamma
+						newProduction := &Production{
+							BodySymbol: append(production2.BodySymbol, production.BodySymbol[1:]...),
+						}
+						newProduction.BodySize = len(newProduction.BodySymbol)
+						ai.ProductionTable = append(ai.ProductionTable, newProduction)
+					}
+					// 删除 ai -> aj \gamma
+					ai.ProductionTable = append(ai.ProductionTable[:index], ai.ProductionTable[index+1:]...)
+				}
+			}
+		}
+
+		// 对 ai 消除直接左递归
+		// 没有左递归，跳过
+		if !ai.LeftRecursive() {
+			continue
+		}
+		newSymbol := &NonTerminalSymbol{
+			GrammarSymbol: GrammarSymbol{
+				Name: ai.Name + "'",
+				Type: NonTerminal,
+			},
+			// 自带一个 \epsilon 产生式
+			ProductionTable: []*Production{
+				{BodySymbol: []interface{}{&epsilonSymbol}, BodySize: 1},
+			},
+		}
+		// 有左递归，加入新的非终结符
+		GrammarSymbolTable = append(GrammarSymbolTable, newSymbol)
+		// 遍历 ai 的产生式
+		for index, prod := range ai.ProductionTable {
+			// 对于有左递归的产生式 ai -> ai \alpha，删除，加入 ai' -> \alpha ai'
+			if len(prod.BodySymbol) > 0 && cmp.Equal(prod.BodySymbol[0], ai) {
+				ai.ProductionTable = append(ai.ProductionTable[:index], ai.ProductionTable[index+1:]...)
+				newProduction := &Production{
+					BodySymbol: append(prod.BodySymbol[1:], newSymbol),
+				}
+				newProduction.BodySize = len(newProduction.BodySymbol)
+				newSymbol.ProductionTable = append(newSymbol.ProductionTable, newProduction)
+			} else {
+				// 对于没有左递归的产生式 ai -> \beta，替换为 ai -> \beta ai'
+				newProduction := &Production{
+					BodySymbol: append(prod.BodySymbol, newSymbol),
+				}
+				newProduction.BodySize = len(newProduction.BodySymbol)
+				ai.ProductionTable[index] = newProduction
+			}
+		}
+	}
+}
+
+// 对单个非终结符检测左递归
+func (s *NonTerminalSymbol) LeftRecursive() bool {
+	for _, prod := range s.ProductionTable {
+		if len(prod.BodySymbol) > 0 && cmp.Equal(prod.BodySymbol[0], s) {
+			return true
+		}
+	}
+	return false
 }
 
 // 对所有非终结符检测左递归
