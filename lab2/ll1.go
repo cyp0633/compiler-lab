@@ -4,6 +4,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// LL1 分析表
+var LL1AnalysisTable = map[struct {
+	*NonTerminalSymbol
+	string
+}]*Production{}
+
 // 消除左递归
 //
 // 使用之前应当先检测左递归
@@ -183,6 +189,53 @@ func CheckLL1() bool {
 	return true
 }
 
+// 构造 LL(1) 分析表
+func BuildLL1AnalysisTable() {
+	// 遍历非终结符 A
+	for _, symbol := range GrammarSymbolTable {
+		symbol, ok := symbol.(*NonTerminalSymbol)
+		if !ok {
+			continue
+		}
+
+		// 遍历产生式 A -> \alpha
+		for _, production := range symbol.ProductionTable {
+			// 对 a \in FIRST(\alpha)
+			for a := range production.First() {
+				switch a := a.(type) {
+				case *GrammarSymbol:
+					// 如果 a 是 epsilon
+					if a.Type == Null {
+						// 对 b \in FOLLOW(A)
+						for b := range symbol.FollowSet {
+							b, ok := b.(*GrammarSymbol)
+							if !ok {
+								continue
+							}
+							// M[A,b] = A -> \alpha
+							LL1AnalysisTable[struct {
+								*NonTerminalSymbol
+								string
+							}{symbol, b.Name}] = production
+						}
+					}
+				// 如果 a 是终结符，M[A,a] = A -> \alpha
+				case *TerminalSymbol:
+					LL1AnalysisTable[struct {
+						*NonTerminalSymbol
+						string
+					}{symbol, a.Name}] = production
+				// FIRST 里应该不会有其他东西吧？
+				default:
+					continue
+				}
+			}
+		}
+	}
+	// 其他情况，直接检测 key 是否存在即可
+}
+
+// 求两个 map 的交集
 func intersectMaps[T comparable, U any](map1 map[T]U, map2 map[T]U) map[T]U {
 	result := make(map[T]U)
 
