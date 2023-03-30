@@ -69,6 +69,11 @@ var epsilonSymbol = GrammarSymbol{
 	Type: Null,
 }
 
+var endSymbol = GrammarSymbol{
+	Name: "#",
+	Type: Terminal,
+}
+
 // 产生式的 FIRST 函数
 func (p *Production) First() map[interface{}]bool {
 	var symbol interface{}
@@ -103,7 +108,7 @@ prod:
 	for index, symbol = range p.BodySymbol {
 		sf := First(symbol)
 		// 如果该非终结符的 First 函数值中包含 epsilon，则继续遍历
-		if _, ok := sf[epsilonSymbol]; ok {
+		if _, ok := sf[&epsilonSymbol]; ok {
 			continue
 		}
 		// 否则将该非终结符的 First 函数值加入该非终结符的 First 函数值
@@ -115,7 +120,7 @@ prod:
 
 	// 如果上次遍历完发现全是空，就加入 epsilon
 	if index == len(p.BodySymbol)-1 {
-		p.FirstSet[epsilonSymbol] = true
+		p.FirstSet[&epsilonSymbol] = true
 	}
 	return p.FirstSet
 }
@@ -154,7 +159,7 @@ func (nt *NonTerminalSymbol) First() map[interface{}]bool {
 // 其实就是它自己
 func (t *TerminalSymbol) First() (m map[interface{}]bool) {
 	m = make(map[interface{}]bool)
-	m[*t] = true
+	m[t] = true
 	return
 }
 
@@ -171,7 +176,7 @@ func First(s interface{}) (m map[interface{}]bool) {
 		return s.First()
 	case *GrammarSymbol:
 		m = make(map[interface{}]bool)
-		m[epsilonSymbol] = true
+		m[&epsilonSymbol] = true
 		return
 	default:
 		panic("Unknown type")
@@ -190,12 +195,7 @@ func Follow() {
 	}
 
 	// 找到初始符，加入 #
-	RootSymbol.FollowSet[TerminalSymbol{
-		GrammarSymbol: GrammarSymbol{
-			Name: "#",
-			Type: Terminal,
-		},
-	}] = true
+	RootSymbol.FollowSet[&endSymbol] = true
 
 	// 循环，直到 FOLLOW 都不变
 	changed := true
