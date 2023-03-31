@@ -69,9 +69,11 @@ var epsilonSymbol = GrammarSymbol{
 	Type: Null,
 }
 
-var endSymbol = GrammarSymbol{
-	Name: "#",
-	Type: Terminal,
+var endSymbol = TerminalSymbol{
+	GrammarSymbol: GrammarSymbol{
+		Name: "#",
+		Type: Terminal,
+	},
 }
 
 // 产生式的 FIRST 函数
@@ -141,7 +143,7 @@ func (nt *NonTerminalSymbol) First() map[interface{}]bool {
 			symbol, ok := p.BodySymbol[0].(*GrammarSymbol)
 			if ok && symbol.Type == Null { // 为什么不能放到一个 if 里啊！！！
 				// 如果存在将 epsilon 加入该非终结符的 First 函数值
-				nt.FirstSet[epsilonSymbol] = true
+				nt.FirstSet[&epsilonSymbol] = true
 			}
 		}
 	}
@@ -233,7 +235,7 @@ func Follow() {
 						// 将 FIRST(\beta)-\epsilon 加入 FOLLOW(B)
 						for k, v := range betaFirst {
 							l := len(B.(*NonTerminalSymbol).FollowSet)
-							if !cmp.Equal(k, epsilonSymbol) {
+							if !cmp.Equal(k, &epsilonSymbol) {
 								B.(*NonTerminalSymbol).FollowSet[k] = v
 							}
 							// 监测长度变化，以判断添加
@@ -246,7 +248,7 @@ func Follow() {
 					// 规则 3
 					// 如果 FIRST(\beta) 中包含 epsilon，或者 \beta 为空
 					// 为 \alpha B 的形式
-					if _, ok := betaFirst[epsilonSymbol]; ok || index == len(production.BodySymbol)-1 {
+					if _, ok := betaFirst[&epsilonSymbol]; ok || index == len(production.BodySymbol)-1 {
 						// 则将 FOLLOW(A) 加入 FOLLOW(B)
 						l := len(B.(*NonTerminalSymbol).FollowSet)
 						for k, v := range A.(*NonTerminalSymbol).FollowSet {

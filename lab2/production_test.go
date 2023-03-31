@@ -168,7 +168,7 @@ func TestTerminalFirst(t *testing.T) {
 	}
 	// 应为它自己
 	f := a.First()
-	if f == nil || len(f) != 1 || !f[a] {
+	if f == nil || len(f) != 1 || !f[&a] {
 		t.Error("Terminal First Error")
 	}
 }
@@ -178,7 +178,7 @@ func TestProductionFirst(t *testing.T) {
 	// E' -> epsilon
 	prod1 := testData1.E1.ProductionTable[1]
 	first1 := prod1.First()
-	if len(first1) != 1 || first1[epsilonSymbol] != true {
+	if len(first1) != 1 || first1[&epsilonSymbol] != true {
 		t.Error("Production First Error, first1:", first1)
 	}
 
@@ -186,7 +186,7 @@ func TestProductionFirst(t *testing.T) {
 	prod2 := testData1.E1.ProductionTable[0]
 	first2 := prod2.First()
 	// { + }
-	if len(first2) != 1 || first2[testData1.plus] != true {
+	if len(first2) != 1 || first2[&testData1.plus] != true {
 		t.Error("Production First Error, first2:", first2)
 	}
 
@@ -199,7 +199,7 @@ func TestNonTerminalFirst(t *testing.T) {
 	nt1 := testData1.F
 	first1 := nt1.First()
 	// { (, id }
-	if len(first1) != 2 || first1[testData1.lparen] != true || first1[testData1.id] != true {
+	if len(first1) != 2 || first1[&testData1.lparen] != true || first1[&testData1.id] != true {
 		t.Error("NonTerminal First Error, first1:", first1)
 	}
 
@@ -207,7 +207,7 @@ func TestNonTerminalFirst(t *testing.T) {
 	nt2 := testData1.E
 	first2 := nt2.First()
 	// { (, id }
-	if len(first2) != 2 || first2[testData1.lparen] != true || first2[testData1.id] != true {
+	if len(first2) != 2 || first2[&testData1.lparen] != true || first2[&testData1.id] != true {
 		t.Error("NonTerminal First Error, first2:", first2)
 	}
 
@@ -215,7 +215,7 @@ func TestNonTerminalFirst(t *testing.T) {
 	nt3 := testData1.E1
 	first3 := nt3.First()
 	// { +, epsilon }
-	if len(first3) != 2 || first3[testData1.plus] != true || first3[epsilonSymbol] != true {
+	if len(first3) != 2 || first3[&testData1.plus] != true || first3[&epsilonSymbol] != true {
 		t.Error("NonTerminal First Error, first3:", first3)
 	}
 
@@ -223,7 +223,7 @@ func TestNonTerminalFirst(t *testing.T) {
 	nt4 := testData1.T
 	first4 := nt4.First()
 	// { (, id }
-	if len(first4) != 2 || first4[testData1.lparen] != true || first4[testData1.id] != true {
+	if len(first4) != 2 || first4[&testData1.lparen] != true || first4[&testData1.id] != true {
 		t.Error("NonTerminal First Error, first4:", first4)
 	}
 
@@ -233,10 +233,10 @@ func TestNonTerminalFirst(t *testing.T) {
 	// 重复，试试会不会出错
 	first51 := nt5.First()
 	// { *, epsilon }
-	if len(first5) != 2 || first5[testData1.mul] != true || first5[epsilonSymbol] != true {
+	if len(first5) != 2 || first5[&testData1.mul] != true || first5[&epsilonSymbol] != true {
 		t.Error("NonTerminal First Error, first5:", first5)
 	}
-	if len(first51) != 2 || first51[testData1.mul] != true || first51[epsilonSymbol] != true {
+	if len(first51) != 2 || first51[&testData1.mul] != true || first51[&epsilonSymbol] != true {
 		t.Error("NonTerminal First Error, first51:", first51)
 	}
 
@@ -251,31 +251,31 @@ func TestAllFollow(t *testing.T) {
 
 	// FOLLOW(E) = { #, ) }
 	follow1 := testData1.E.FollowSet
-	if len(follow1) != 2 || follow1[testData1.rparen] != true {
+	if len(follow1) != 2 || follow1[&testData1.rparen] != true {
 		t.Error("Follow Error, follow1:", follow1)
 	}
 
 	// FOLLOW(E') = { #, ) }
 	follow2 := testData1.E1.FollowSet
-	if len(follow2) != 2 || follow2[testData1.rparen] != true {
+	if len(follow2) != 2 || follow2[&testData1.rparen] != true {
 		t.Error("Follow Error, follow2:", follow2)
 	}
 
 	// FOLLOW(T) = { +, #, ) }
 	follow3 := testData1.T.FollowSet
-	if len(follow3) != 3 || follow3[testData1.plus] != true || follow3[testData1.rparen] != true {
+	if len(follow3) != 3 || follow3[&testData1.plus] != true || follow3[&testData1.rparen] != true {
 		t.Error("Follow Error, follow3:", follow3)
 	}
 
 	// FOLLOW(T') = { +, #, ) }
 	follow4 := testData1.T1.FollowSet
-	if len(follow4) != 3 || follow4[testData1.plus] != true || follow4[testData1.rparen] != true {
+	if len(follow4) != 3 || follow4[&testData1.plus] != true || follow4[&testData1.rparen] != true {
 		t.Error("Follow Error, follow4:", follow4)
 	}
 
 	// FOLLOW(F) = { *, +, #, ) }
 	follow5 := testData1.F.FollowSet
-	if len(follow5) != 4 || follow5[testData1.mul] != true || follow5[testData1.plus] != true || follow5[testData1.rparen] != true {
+	if len(follow5) != 4 || follow5[&testData1.mul] != true || follow5[&testData1.plus] != true || follow5[&testData1.rparen] != true {
 		t.Error("Follow Error, follow5:", follow5)
 	}
 }
