@@ -208,15 +208,24 @@ func BuildLL1AnalysisTable() {
 					if a.Type == Null {
 						// 对 b \in FOLLOW(A)
 						for b := range symbol.FollowSet {
-							b, ok := b.(*GrammarSymbol)
-							if !ok {
-								continue
+							var name string
+							switch b := b.(type) {
+							case *TerminalSymbol:
+								name = b.Name
+							case *GrammarSymbol:
+								// 不考虑空输入
+								if b == &epsilonSymbol {
+									continue
+								}
+								name = b.Name
+							default:
+								panic("unknown type")
 							}
 							// M[A,b] = A -> \alpha
 							LL1AnalysisTable[struct {
 								*NonTerminalSymbol
 								string
-							}{symbol, b.Name}] = production
+							}{symbol, name}] = production
 						}
 					}
 				// 如果 a 是终结符，M[A,a] = A -> \alpha
@@ -227,7 +236,7 @@ func BuildLL1AnalysisTable() {
 					}{symbol, a.Name}] = production
 				// FIRST 里应该不会有其他东西吧？
 				default:
-					continue
+					panic("unknown type")
 				}
 			}
 		}

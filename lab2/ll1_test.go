@@ -1,6 +1,9 @@
 package lab2
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 var leftRecursionExample struct {
 	S, T, F               NonTerminalSymbol
@@ -280,5 +283,114 @@ func TestCheckLL1(t *testing.T) {
 
 	if CheckLL1() {
 		t.Error("TestCheckLL1 failed")
+	}
+}
+
+// 测试生成 LL1 分析表
+func TestBuildLL1AnalysisTable(t *testing.T) {
+	// fill testData1
+	GrammarSymbolTable = []interface{}{&testData1.E, &testData1.E1, &testData1.T, &testData1.T1, &testData1.F, &testData1.lparen, &testData1.rparen, &testData1.plus, &testData1.mul, &testData1.id}
+	RootSymbol = &testData1.E
+	Follow()
+
+	BuildLL1AnalysisTable()
+	for key, value := range LL1AnalysisTable {
+		fmt.Printf("Symbol %v, input %v = production %v\n", key.NonTerminalSymbol.Name, key.string, value)
+	}
+
+	if len(LL1AnalysisTable) != 13 {
+		t.Errorf("Length wanted 13, got %v", len(LL1AnalysisTable))
+	}
+
+	// E, id = E -> T E'
+	if LL1AnalysisTable[struct {
+		*NonTerminalSymbol
+		string
+	}{&testData1.E, "id"}] != testData1.E.ProductionTable[0] {
+		t.Error("E, id = E -> T E' not found")
+	}
+	// E, ( = E -> T E'
+	if LL1AnalysisTable[struct {
+		*NonTerminalSymbol
+		string
+	}{&testData1.E, "("}] != testData1.E.ProductionTable[0] {
+		t.Error("E, ( = E -> T E' not found")
+	}
+	// E', + = E' -> + T E'
+	if LL1AnalysisTable[struct {
+		*NonTerminalSymbol
+		string
+	}{&testData1.E1, "+"}] != testData1.E1.ProductionTable[0] {
+		t.Error("E', + = E' -> + T E' not found")
+	}
+	// E', ) = E' -> \epsilon
+	if LL1AnalysisTable[struct {
+		*NonTerminalSymbol
+		string
+	}{&testData1.E1, ")"}] != testData1.E1.ProductionTable[1] {
+		t.Error("E', ) = E' -> \\epsilon not found")
+	}
+	// E', # = E' -> \epsilon
+	if LL1AnalysisTable[struct {
+		*NonTerminalSymbol
+		string
+	}{&testData1.E1, "#"}] != testData1.E1.ProductionTable[1] {
+		t.Error("E', # = E' -> \\epsilon not found")
+	}
+	// T, id = T -> F T'
+	if LL1AnalysisTable[struct {
+		*NonTerminalSymbol
+		string
+	}{&testData1.T, "id"}] != testData1.T.ProductionTable[0] {
+		t.Error("T, id = T -> F T' not found")
+	}
+	// T, ( = T -> F T'
+	if LL1AnalysisTable[struct {
+		*NonTerminalSymbol
+		string
+	}{&testData1.T, "("}] != testData1.T.ProductionTable[0] {
+		t.Error("T, ( = T -> F T' not found")
+	}
+	// T', + = T' -> \epsilon
+	if LL1AnalysisTable[struct {
+		*NonTerminalSymbol
+		string
+	}{&testData1.T1, "+"}] != testData1.T1.ProductionTable[1] {
+		t.Error("T', + = T' -> \\epsilon not found")
+	}
+	// T', * = T' -> * F T'
+	if LL1AnalysisTable[struct {
+		*NonTerminalSymbol
+		string
+	}{&testData1.T1, "*"}] != testData1.T1.ProductionTable[0] {
+		t.Error("T', * = T' -> * F T' not found")
+	}
+	// T', ) = T' -> \epsilon
+	if LL1AnalysisTable[struct {
+		*NonTerminalSymbol
+		string
+	}{&testData1.T1, ")"}] != testData1.T1.ProductionTable[1] {
+		t.Error("T', ) = T' -> \\epsilon not found")
+	}
+	// T', # = T' -> \epsilon
+	if LL1AnalysisTable[struct {
+		*NonTerminalSymbol
+		string
+	}{&testData1.T1, "#"}] != testData1.T1.ProductionTable[1] {
+		t.Error("T', # = T' -> \\epsilon not found")
+	}
+	// F, id = F -> id
+	if LL1AnalysisTable[struct {
+		*NonTerminalSymbol
+		string
+	}{&testData1.F, "id"}] != testData1.F.ProductionTable[1] {
+		t.Error("F, id = F -> id not found")
+	}
+	// F, ( = F -> ( E )
+	if LL1AnalysisTable[struct {
+		*NonTerminalSymbol
+		string
+	}{&testData1.F, "("}] != testData1.F.ProductionTable[0] {
+		t.Error("F, ( = F -> ( E ) not found")
 	}
 }
