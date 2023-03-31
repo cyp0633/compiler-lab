@@ -82,7 +82,7 @@ func (p *Production) First() map[interface{}]bool {
 
 	// 只有 epsilon，就直接返回
 	if p.BodySize == 1 && cmp.Equal(p.BodySymbol[0], &epsilonSymbol) {
-		return map[interface{}]bool{epsilonSymbol: true}
+		return map[interface{}]bool{&epsilonSymbol: true}
 	}
 
 	// 遍历整个产生式的文法符，找到第一个非终结符……或终结符
@@ -99,6 +99,8 @@ prod:
 			break prod
 		// s 是终结符
 		case *TerminalSymbol:
+			// 将终结符加入该非终结符的 First 函数值
+			p.FirstSet[symbol] = true
 			// 直接将其作为 FIRST 函数值返回
 			return symbol.First()
 		}
