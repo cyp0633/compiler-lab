@@ -166,26 +166,44 @@ func CheckLL1() bool {
 		}
 	}
 
-	// 检测 FIRST 集是否有交集
-	for _, symbol1 := range GrammarSymbolTable {
-		for _, symbol2 := range GrammarSymbolTable {
-			if symbol2 == symbol1 {
-				continue
-			}
-
-			nt1, ok1 := symbol1.(*NonTerminalSymbol)
-			nt2, ok2 := symbol2.(*NonTerminalSymbol)
-			if !ok1 || !ok2 {
-				continue
-			}
-
-			result := intersectMaps(nt1.First(), nt2.First())
-			if len(result) > 0 {
-				return false
+	// 检查 FOLLOW 是否有交集
+	for _, symbol := range GrammarSymbolTable {
+		symbol, ok := symbol.(*NonTerminalSymbol)
+		if !ok {
+			continue
+		}
+		set := make(map[interface{}]bool)
+		for _, production := range symbol.ProductionTable {
+			for k, v := range production.Select(symbol) {
+				if set[k] && v {
+					return false
+				}
+				set[k] = v
 			}
 		}
 	}
 	return true
+}
+
+// SELECT 集
+func (p *Production) Select(s *NonTerminalSymbol) map[interface{}]bool {
+	// \alpha 为空
+	if p.BodySize == 1 && p.BodySymbol[0] == &epsilonSymbol {
+		if s.FollowSet == nil {
+			Follow()
+		}
+		// FOLLOW(A) \cup FIRST(\alpha)
+		set := make(map[interface{}]bool)
+		for k, v := range s.FollowSet {
+			set[k] = v
+		}
+		for k, v := range p.First() {
+			set[k] = v
+		}
+		return set
+	} else {
+		return p.First()
+	}
 }
 
 // 构造 LL(1) 分析表
