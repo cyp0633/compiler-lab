@@ -231,8 +231,8 @@ func initLL1Example() {
 	})
 	// A -> \epsilon
 	ll1Example.A.ProductionTable = append(ll1Example.A.ProductionTable, &Production{
-		BodySize:   0,
-		BodySymbol: []interface{}{},
+		BodySize:   1,
+		BodySymbol: []interface{}{&epsilonSymbol},
 	})
 }
 
