@@ -1,5 +1,7 @@
 package lab2
 
+import "fmt"
+
 // LR(0) 项
 type LR0Item struct {
 	NonTerminalSymbol *NonTerminalSymbol // 非终结符
@@ -146,5 +148,31 @@ func maxItemSetID() (maxID int) {
 		return -1
 	}
 	maxID = ItemSetTable[len(ItemSetTable)-1].ID
+	return
+}
+
+func (item *LR0Item) String() (str string) {
+	str = item.NonTerminalSymbol.Name + " -> "
+	for index, symbol := range item.Production.BodySymbol {
+		if index == item.DotPosition {
+			str += "• "
+		}
+		switch symbol := symbol.(type) {
+		case *NonTerminalSymbol:
+			str += symbol.Name + " "
+		case *TerminalSymbol:
+			str += symbol.Name + " "
+		default:
+			panic("unknown symbol type")
+		}
+	}
+	return
+}
+
+func (set *ItemSet) String() (str string) {
+	str = fmt.Sprintf("Item set #%d:\n", set.ID)
+	for item := range set.ItemTable {
+		str += item.String() + "\n"
+	}
 	return
 }
