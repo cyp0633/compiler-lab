@@ -22,8 +22,8 @@ const (
 type ItemSet struct {
 	// 状态序号
 	ID int
-	// LR(0) 项目表
-	ItemTable []*LR0Item
+	// LR(0) 项目表（其实是个集合）
+	ItemTable map[*LR0Item]struct{}
 }
 
 // 变迁边
@@ -102,28 +102,23 @@ func (itemSet *ItemSet) Closure() (closureSet *ItemSet) {
 	for len(closureSet.ItemTable) != lastSize {
 		lastSize = len(closureSet.ItemTable)
 		// 遍历 closureSet 中的每个项目
-		for _, item := range closureSet.ItemTable {
+		for item := range closureSet.ItemTable {
 			// 寻找 \alpha \cdot B \beta
 			// 即 dotPosition 处之后为非终结符的项目
-			B := item.Production.BodySymbol[item.DotPosition]
-			B, ok := B.(*NonTerminalSymbol)
+			B, ok := item.Production.BodySymbol[item.DotPosition].(*NonTerminalSymbol)
 			if !ok {
 				continue
 			}
-			// 重新遍历 I
-			for _, item1 := range itemSet.ItemTable {
-				// 寻找 B -> \cdot \gamma
-				if item1.NonTerminalSymbol != B || item1.DotPosition != 0 {
-					continue
+			// 遍历 B 的产生式
+			for _, production := range B.ProductionTable {
+				// 对 B \to \gamma，添加项目 B \to \cdot \gamma
+				item1 := &LR0Item{
+					NonTerminalSymbol: B,
+					Production:        production,
+					DotPosition:       0,
+					Type:              NonCoreItem,
 				}
-				// 将 B -> \cdot \gamma 加入 closureSet
-				item2 := &LR0Item{
-					NonTerminalSymbol: item1.NonTerminalSymbol,
-					Production:        item1.Production,
-					DotPosition:       item1.DotPosition,
-					Type:              item1.Type,
-				}
-				closureSet.ItemTable = append(closureSet.ItemTable, item2)
+				closureSet.ItemTable[item1] = struct{}{}
 			}
 		}
 	}
@@ -135,16 +130,10 @@ func copyItemSet(itemSet *ItemSet) (newItemSet *ItemSet) {
 	newItemSet = &ItemSet{
 		ID: maxItemSetID() + 1,
 	}
-	for _, item := range itemSet.ItemTable {
-		// 深拷贝时不需要继续拷贝到 NonTerminal 和 Production
-		// 因为语法分析时没必要改变这些东西
-		item1 := &LR0Item{
-			NonTerminalSymbol: item.NonTerminalSymbol,
-			Production:        item.Production,
-			DotPosition:       item.DotPosition,
-			Type:              item.Type,
-		}
-		newItemSet.ItemTable = append(newItemSet.ItemTable, item1)
+	for item := range itemSet.ItemTable {
+		// 深拷贝时可以直接复制指针
+		// 毕竟 item 不会变
+		newItemSet.ItemTable[item] = struct{}{}
 	}
 	// 加入项目集表
 	ItemSetTable = append(ItemSetTable, newItemSet)
