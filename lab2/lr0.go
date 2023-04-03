@@ -25,7 +25,7 @@ type ItemSet struct {
 	// 状态序号
 	ID int
 	// LR(0) 项目表（其实是个集合）
-	ItemTable map[*LR0Item]struct{}
+	ItemTable map[LR0Item]struct{}
 }
 
 // 变迁边
@@ -114,13 +114,15 @@ func (itemSet *ItemSet) Closure() (closureSet *ItemSet) {
 			// 遍历 B 的产生式
 			for _, production := range B.ProductionTable {
 				// 对 B \to \gamma，添加项目 B \to \cdot \gamma
-				item1 := &LR0Item{
+				item1 := LR0Item{
 					NonTerminalSymbol: B,
 					Production:        production,
 					DotPosition:       0,
 					Type:              NonCoreItem,
 				}
-				closureSet.ItemTable[item1] = struct{}{}
+				if _, ok := closureSet.ItemTable[item1]; !ok {
+					closureSet.ItemTable[item1] = struct{}{}
+				}
 			}
 		}
 	}
@@ -130,7 +132,8 @@ func (itemSet *ItemSet) Closure() (closureSet *ItemSet) {
 // 深拷贝项目集
 func copyItemSet(itemSet *ItemSet) (newItemSet *ItemSet) {
 	newItemSet = &ItemSet{
-		ID: maxItemSetID() + 1,
+		ID:        maxItemSetID() + 1,
+		ItemTable: map[LR0Item]struct{}{},
 	}
 	for item := range itemSet.ItemTable {
 		// 深拷贝时可以直接复制指针

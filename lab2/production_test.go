@@ -12,6 +12,7 @@ func TestMain(m *testing.M) {
 	initLeftRecursionExample()
 	initLeftFactorExample()
 	initLL1Example()
+	initNYUMainExmaple()
 	code := m.Run()
 	os.Exit(code)
 }
