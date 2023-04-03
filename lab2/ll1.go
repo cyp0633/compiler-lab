@@ -260,16 +260,3 @@ func BuildLL1AnalysisTable() {
 	}
 	// 其他情况，直接检测 key 是否存在即可
 }
-
-// 求两个 map 的交集
-func intersectMaps[T comparable, U any](map1 map[T]U, map2 map[T]U) map[T]U {
-	result := make(map[T]U)
-
-	for key1 := range map1 {
-		if _, ok := map2[key1]; ok {
-			result[key1] = map1[key1]
-		}
-	}
-
-	return result
-}
