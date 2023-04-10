@@ -126,6 +126,9 @@ func initNYUMainExmaple() {
 }
 
 func TestItemSetClosure(t *testing.T) {
+	// 防止之前的测试影响
+	ItemSetTable = []*ItemSet{}
+
 	GrammarSymbolTable = []interface{}{&nyuMainExample.E1, &nyuMainExample.E, &nyuMainExample.T, &nyuMainExample.F, &nyuMainExample.Plus, &nyuMainExample.Mul, &nyuMainExample.LeftParenthesis, &nyuMainExample.RightParenthesis, &nyuMainExample.Id}
 	// Closure({E' -> .E})
 	set1 := &ItemSet{
@@ -144,6 +147,9 @@ func TestItemSetClosure(t *testing.T) {
 }
 
 func TestExhaustTransition(t *testing.T) {
+	// 防止之前的测试影响
+	ItemSetTable = []*ItemSet{}
+
 	GrammarSymbolTable = []interface{}{&nyuMainExample.E1, &nyuMainExample.E, &nyuMainExample.T, &nyuMainExample.F, &nyuMainExample.Plus, &nyuMainExample.Mul, &nyuMainExample.LeftParenthesis, &nyuMainExample.RightParenthesis, &nyuMainExample.Id}
 	// 初始化第一个状态
 	// E' \to \cdot E 的闭包
@@ -156,13 +162,17 @@ func TestExhaustTransition(t *testing.T) {
 	ItemSetTable = append(ItemSetTable, set1)
 
 	// 每个状态的项目数
-	stateItems := []int{7, 2, 2, 1, 7, 1, 5, 3, 2, 2, 1, 1}
+	// stateItems := []int{7, 2, 2, 1, 7, 1, 5, 3, 2, 2, 1, 1}
+	stateItems := map[int]int{7: 2, 5: 1, 3: 1, 2: 4, 1: 4}
 
 	for i := 0; i < len(ItemSetTable); i++ {
 		t.Log(ItemSetTable[i].String())
-		if len(ItemSetTable[i].ItemTable) != stateItems[i] {
-			t.Errorf("state %d should have %d items but got %d", i, stateItems[i], len(ItemSetTable[i].ItemTable))
-		}
+		stateItems[len(ItemSetTable[i].ItemTable)]--
 		ItemSetTable[i].ExhaustTransition()
+	}
+	for k, v := range stateItems {
+		if v != 0 {
+			t.Errorf("Missing %d states with %d items", v, k)
+		}
 	}
 }

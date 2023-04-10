@@ -154,6 +154,7 @@ func copyItemSet(itemSet *ItemSet) (newItemSet *ItemSet) {
 // 穷举（某个）项目集的变迁
 func (itemSet *ItemSet) ExhaustTransition() {
 	// 驱动符，就是点之后的符号，可能是终结符或非终结符（均为指针）
+	// 由于 ItemTable 是个 map，无法指定驱动符出现的顺序
 	drivers := map[interface{}]struct{}{}
 	// 遍历项目集中的每个项目
 	for item := range itemSet.ItemTable {
