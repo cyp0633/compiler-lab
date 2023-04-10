@@ -147,7 +147,7 @@ func copyItemSet(itemSet *ItemSet) (newItemSet *ItemSet) {
 	return
 }
 
-// 穷举项目集变迁
+// 穷举（某个）项目集的变迁
 func (itemSet *ItemSet) ExhaustTransition() {
 	// 驱动符，就是点之后的符号，可能是终结符或非终结符（均为指针）
 	drivers := map[interface{}]struct{}{}
@@ -176,6 +176,7 @@ func (itemSet *ItemSet) ExhaustTransition() {
 		// 取出该驱动符对应的项目集
 		itemSet := newItemSets[item.Production.BodySymbol[item.DotPosition]].ItemTable
 		// 将项目 item 的点后移一位
+		// 新的项目！
 		item1 := LR0Item{
 			NonTerminalSymbol: item.NonTerminalSymbol,
 			Production:        item.Production,
@@ -191,14 +192,21 @@ func (itemSet *ItemSet) ExhaustTransition() {
 		// 求 Closure
 		closureSet := itemSet.Closure()
 		// 检查是否已存在
+		exist := false
 		for _, set := range ItemSetTable {
 			if cmp.Equal(set.ItemTable, closureSet.ItemTable) {
 				// 已存在，将新项目集指向已存在的项目集
 				newItemSets[driver] = set
+				exist = true
 				break
 			}
 		}
-
+		// 不存在，加入项目集规范族
+		if !exist {
+			newItemSets[driver] = closureSet
+			closureSet.ID = maxItemSetID() + 1
+			ItemSetTable = append(ItemSetTable, closureSet)
+		}
 	}
 }
 
@@ -226,11 +234,16 @@ func (item *LR0Item) String() (str string) {
 			panic("unknown symbol type")
 		}
 	}
+	if item.Type == CoreItem {
+		str += "\t(Core)"
+	} else {
+		str += "\t(NonCore)"
+	}
 	return
 }
 
 func (set *ItemSet) String() (str string) {
-	str = fmt.Sprintf("Item set #%d:\n", set.ID)
+	str = fmt.Sprintf("Item set #%d, %d items:\n", set.ID, len(set.ItemTable))
 	for item := range set.ItemTable {
 		str += item.String() + "\n"
 	}
