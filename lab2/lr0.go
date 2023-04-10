@@ -18,9 +18,11 @@ type LR0Item struct {
 type itemCategory int
 
 const (
-	//核心项
+	// 核心项
+	// S' \to \cdot S 和所有点不在左端的
 	CoreItem itemCategory = iota
-	//非核心项
+	// 非核心项
+	// 除那个以外所有点在左端的
 	NonCoreItem
 )
 
@@ -50,17 +52,7 @@ type DFA struct {
 // LR(0) DFA 项集表
 var ItemSetTable []*ItemSet
 
-type ActionCell struct {
-	// 状态序号
-	StateID int
-	// 终结符名称
-	TerminalSymbolName string
-	// 动作
-	Type ActionCategory
-	// 动作编号
-	ActionID int
-}
-
+// Action 动作类型，没有对应表项代表错误
 type ActionCategory int
 
 const (
@@ -72,20 +64,28 @@ const (
 	Accept
 )
 
-type GotoCell struct {
-	// 状态序号
+// LR Action 表
+// 由状态 ID 和终结符名称，到动作类型和编号的映射
+var ActionTable map[struct {
+	// 当前栈顶状态序号
+	StateID int
+	// 待读入的终结符名称
+	TerminalSymbolName string
+}]struct {
+	// 动作类型
+	Type ActionCategory
+	// 动作编号，如归约的产生式编号和移进的下个状态
+	ActionID int
+}
+
+// LR Goto 表
+// 由状态 ID 和非终结符名称，到转换状态序号的映射
+var GotoTable map[struct {
+	// 当前栈顶状态序号
 	StateID int
 	// 非终结符名称
 	NonTerminalSymbolName string
-	// 转换状态序号
-	NextStateID int
-}
-
-// 分析表 Action 部分（如何改 map？）
-var ActionTable []*ActionCell
-
-// 分析表 Goto 部分
-var GotoTable []*GotoCell
+}]int
 
 type ProductionInfo struct {
 	// 产生式编号
@@ -134,9 +134,9 @@ func (itemSet *ItemSet) Closure() (closureSet *ItemSet) {
 }
 
 // 深拷贝项目集
+// 不再直接加入项目集规范族（即 ItemSetTable）
 func copyItemSet(itemSet *ItemSet) (newItemSet *ItemSet) {
 	newItemSet = &ItemSet{
-		ID:        maxItemSetID() + 1,
 		ItemTable: map[LR0Item]struct{}{},
 	}
 	for item := range itemSet.ItemTable {
@@ -144,8 +144,6 @@ func copyItemSet(itemSet *ItemSet) (newItemSet *ItemSet) {
 		// 毕竟 item 不会变
 		newItemSet.ItemTable[item] = struct{}{}
 	}
-	// 加入项目集表
-	ItemSetTable = append(ItemSetTable, newItemSet)
 	return
 }
 
@@ -200,7 +198,7 @@ func (itemSet *ItemSet) ExhaustTransition() {
 				break
 			}
 		}
-		
+
 	}
 }
 
