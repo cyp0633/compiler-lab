@@ -1,6 +1,10 @@
 package lab2
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/google/go-cmp/cmp"
+)
 
 // LR(0) 项
 type LR0Item struct {
@@ -143,6 +147,61 @@ func copyItemSet(itemSet *ItemSet) (newItemSet *ItemSet) {
 	// 加入项目集表
 	ItemSetTable = append(ItemSetTable, newItemSet)
 	return
+}
+
+// 穷举项目集变迁
+func (itemSet *ItemSet) ExhaustTransition() {
+	// 驱动符，就是点之后的符号，可能是终结符或非终结符（均为指针）
+	drivers := map[interface{}]struct{}{}
+	// 遍历项目集中的每个项目
+	for item := range itemSet.ItemTable {
+		// 将项目 item 的点后的符号加入驱动符集
+		if item.DotPosition < len(item.Production.BodySymbol) {
+			drivers[item.Production.BodySymbol[item.DotPosition]] = struct{}{}
+		}
+	}
+
+	// 对每一种驱动符，新建一个项目集
+	// key 为驱动符，一个指针
+	newItemSets := map[interface{}]*ItemSet{}
+	for driver := range drivers {
+		newItemSets[driver] = &ItemSet{ItemTable: map[LR0Item]struct{}{}}
+	}
+
+	// 遍历项目集中的每个项目
+	// 此处并不需要驱动符一层项目再一层，省点时间
+	for item := range itemSet.ItemTable {
+		// 如果已经是归约/接受项目（A \to \cdot \alpha），则不需要变迁
+		if item.DotPosition == len(item.Production.BodySymbol) {
+			continue
+		}
+		// 取出该驱动符对应的项目集
+		itemSet := newItemSets[item.Production.BodySymbol[item.DotPosition]].ItemTable
+		// 将项目 item 的点后移一位
+		item1 := LR0Item{
+			NonTerminalSymbol: item.NonTerminalSymbol,
+			Production:        item.Production,
+			DotPosition:       item.DotPosition + 1,
+			Type:              item.Type,
+		}
+		// 将新项目加入项目集
+		itemSet[item1] = struct{}{}
+	}
+
+	// 对每一个新项目集，求 Closure
+	for driver, itemSet := range newItemSets {
+		// 求 Closure
+		closureSet := itemSet.Closure()
+		// 检查是否已存在
+		for _, set := range ItemSetTable {
+			if cmp.Equal(set.ItemTable, closureSet.ItemTable) {
+				// 已存在，将新项目集指向已存在的项目集
+				newItemSets[driver] = set
+				break
+			}
+		}
+		
+	}
 }
 
 // 项目集表的最大 ID
