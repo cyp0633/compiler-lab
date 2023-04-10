@@ -142,3 +142,27 @@ func TestItemSetClosure(t *testing.T) {
 	}
 	t.Log(closure1.String())
 }
+
+func TestExhaustTransition(t *testing.T) {
+	GrammarSymbolTable = []interface{}{&nyuMainExample.E1, &nyuMainExample.E, &nyuMainExample.T, &nyuMainExample.F, &nyuMainExample.Plus, &nyuMainExample.Mul, &nyuMainExample.LeftParenthesis, &nyuMainExample.RightParenthesis, &nyuMainExample.Id}
+	// 初始化第一个状态
+	// E' \to \cdot E 的闭包
+	set1 := &ItemSet{
+		ItemTable: map[LR0Item]struct{}{
+			{NonTerminalSymbol: nyuMainExample.E1, Production: nyuMainExample.E1.ProductionTable[0], DotPosition: 0}: {},
+		},
+	}
+	set1 = set1.Closure()
+	ItemSetTable = append(ItemSetTable, set1)
+
+	// 每个状态的项目数
+	stateItems := []int{7, 2, 2, 1, 7, 1, 5, 3, 2, 2, 1, 1}
+
+	for i := 0; i < len(ItemSetTable); i++ {
+		t.Log(ItemSetTable[i].String())
+		if len(ItemSetTable[i].ItemTable) != stateItems[i] {
+			t.Errorf("state %d should have %d items but got %d", i, stateItems[i], len(ItemSetTable[i].ItemTable))
+		}
+		ItemSetTable[i].ExhaustTransition()
+	}
+}

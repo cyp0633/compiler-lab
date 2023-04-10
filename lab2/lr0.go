@@ -109,6 +109,10 @@ func (itemSet *ItemSet) Closure() (closureSet *ItemSet) {
 		lastSize = len(closureSet.ItemTable)
 		// 遍历 closureSet 中的每个项目
 		for item := range closureSet.ItemTable {
+			// 如果是 \alpha \cdot 即归约/接受项目，跳过
+			if item.DotPosition == len(item.Production.BodySymbol) {
+				continue
+			}
 			// 寻找 \alpha \cdot B \beta
 			// 即 dotPosition 处之后为非终结符的项目
 			B, ok := item.Production.BodySymbol[item.DotPosition].(*NonTerminalSymbol)
@@ -181,7 +185,7 @@ func (itemSet *ItemSet) ExhaustTransition() {
 			NonTerminalSymbol: item.NonTerminalSymbol,
 			Production:        item.Production,
 			DotPosition:       item.DotPosition + 1,
-			Type:              item.Type,
+			Type:              CoreItem, // 一定是核心项啦
 		}
 		// 将新项目加入项目集
 		itemSet[item1] = struct{}{}
@@ -233,6 +237,9 @@ func (item *LR0Item) String() (str string) {
 		default:
 			panic("unknown symbol type")
 		}
+	}
+	if item.DotPosition == len(item.Production.BodySymbol) {
+		str += "•"
 	}
 	if item.Type == CoreItem {
 		str += "\t(Core)"
