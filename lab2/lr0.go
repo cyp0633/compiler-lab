@@ -151,6 +151,36 @@ func copyItemSet(itemSet *ItemSet) (newItemSet *ItemSet) {
 	return
 }
 
+// 项目集的 Goto 函数
+func (itemSet *ItemSet) Goto(X interface{}) (gotoSet *ItemSet) {
+	gotoSet = &ItemSet{
+		ID:        itemSet.ID,
+		ItemTable: map[LR0Item]struct{}{},
+	}
+
+	for item := range itemSet.ItemTable {
+		// 如果是 \alpha \cdot 即归约/接受项目，跳过
+		if item.DotPosition == len(item.Production.BodySymbol) {
+			continue
+		}
+		// 寻找 \alpha \cdot X \beta
+		// 即 dotPosition 处之后为 X 的项目
+		if item.Production.BodySymbol[item.DotPosition] == X {
+			// 对 \alpha X \cdot \beta，添加项目 \alpha X \to \cdot \beta
+			item1 := LR0Item{
+				NonTerminalSymbol: item.NonTerminalSymbol,
+				Production:        item.Production,
+				DotPosition:       item.DotPosition + 1,
+				Type:              NonCoreItem,
+			}
+			if _, ok := gotoSet.ItemTable[item1]; !ok {
+				gotoSet.ItemTable[item1] = struct{}{}
+			}
+		}
+	}
+	return
+}
+
 // 穷举（某个）项目集的变迁
 func (itemSet *ItemSet) ExhaustTransition() {
 	drivers := itemSet.driver()
