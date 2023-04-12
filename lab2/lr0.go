@@ -153,16 +153,7 @@ func copyItemSet(itemSet *ItemSet) (newItemSet *ItemSet) {
 
 // 穷举（某个）项目集的变迁
 func (itemSet *ItemSet) ExhaustTransition() {
-	// 驱动符，就是点之后的符号，可能是终结符或非终结符（均为指针）
-	// 由于 ItemTable 是个 map，无法指定驱动符出现的顺序
-	drivers := map[interface{}]struct{}{}
-	// 遍历项目集中的每个项目
-	for item := range itemSet.ItemTable {
-		// 将项目 item 的点后的符号加入驱动符集
-		if item.DotPosition < len(item.Production.BodySymbol) {
-			drivers[item.Production.BodySymbol[item.DotPosition]] = struct{}{}
-		}
-	}
+	drivers := itemSet.driver()
 
 	// 对每一种驱动符，新建一个项目集
 	// key 为驱动符，一个指针
@@ -213,6 +204,35 @@ func (itemSet *ItemSet) ExhaustTransition() {
 			ItemSetTable = append(ItemSetTable, closureSet)
 		}
 	}
+}
+
+// 得到一个项目集的所有驱动符
+func (itemSet *ItemSet) driver() (drivers map[interface{}]struct{}) {
+	// 驱动符，就是点之后的符号，可能是终结符或非终结符（均为指针）
+	// 由于 ItemTable 是个 map，无法指定驱动符出现的顺序
+	drivers = map[interface{}]struct{}{}
+
+	// 遍历项目集中的每个项目
+	for item := range itemSet.ItemTable {
+		// 将项目 item 的点后的符号加入驱动符集
+		if item.DotPosition < len(item.Production.BodySymbol) {
+			drivers[item.Production.BodySymbol[item.DotPosition]] = struct{}{}
+		}
+	}
+	return
+}
+
+// 得到一个项目集对应的核心项集
+func (itemSet *ItemSet) core() (coreSet *ItemSet) {
+	coreSet = &ItemSet{
+		ID: itemSet.ID,
+	}
+	for item := range itemSet.ItemTable {
+		if item.Type == CoreItem {
+			coreSet.ItemTable[item] = struct{}{}
+		}
+	}
+	return
 }
 
 // 项目集表的最大 ID
