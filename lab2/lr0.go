@@ -334,6 +334,63 @@ func BuildDFA() {
 	}
 }
 
+// 检查是否为 SLR(1) 文法
+// 需要先构造项目集规范族
+func CheckSLR1() bool {
+	// 遍历项目集规范族
+	for _, itemSet := range ItemSetTable {
+		// 归约项集和移进项对应终结符集
+		reduceSet := map[LR0Item]struct{}{}
+		shiftSymbols := map[TerminalSymbol]struct{}{}
+		// 遍历项目集中的每个项目
+		for item := range itemSet.ItemTable {
+			// 归约项
+			if item.DotPosition == len(item.Production.BodySymbol) {
+				// 跳过接受项
+				if item.NonTerminalSymbol == RootSymbol {
+					continue
+				}
+				reduceSet[item] = struct{}{}
+			} else if symbol, ok := item.Production.BodySymbol[item.DotPosition].(*TerminalSymbol); ok {
+				// 移进项
+				// 点后面是终结符
+				shiftSymbols[*symbol] = struct{}{}
+			}
+		}
+
+		// 如果归约和移进二者至多存在一种，则是LR(0)，更是 SLR(1)
+		if (len(reduceSet) == 0) != (len(shiftSymbols) == 0) {
+			return true
+		}
+
+		// 否则，求交集
+		tempSet := map[TerminalSymbol]struct{}{}
+		// 先把移进项的终结符加入
+		for symbol := range shiftSymbols {
+			tempSet[symbol] = struct{}{}
+		}
+		// 然后是归约项左端的 follow 集
+		Follow()
+		for item := range reduceSet {
+			// 对每个项的 follow 先看看是不是存在，再加入
+			for symbol := range item.NonTerminalSymbol.FollowSet {
+				terminal, ok := symbol.(*TerminalSymbol)
+				if !ok {
+					// 是个 epsilon
+					continue
+				}
+				if _, ok := tempSet[*terminal]; ok {
+					// 有交集，不是 SLR(1)
+					return false
+				}
+				tempSet[*terminal] = struct{}{}
+			}
+		}
+	}
+	// 都没问题，是 SLR(1)
+	return true
+}
+
 // 项目集表的最大 ID
 func maxItemSetID() (maxID int) {
 	if len(ItemSetTable) == 0 {
