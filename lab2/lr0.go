@@ -35,18 +35,18 @@ type ItemSet struct {
 }
 
 // 变迁边
-type TransitionEdge struct {
+type TransitionKey struct {
 	DriverSymbol interface{} // 转换符，某个语法符的指针
 	FromItemSet  *ItemSet    // 起始状态
-	ToItemSet    *ItemSet    // 终止状态
 }
 
 // LR(0) 自动机
 var DFA struct {
 	// 开始项集
 	StartItemSet *ItemSet
-	// 变迁边表
-	EdgeTable []*TransitionEdge
+	// map 优化的变迁边表
+	// 通常查询更快，极端情况下也不会更慢
+	EdgeSet map[TransitionKey]*ItemSet
 }
 
 // LR(0) DFA 项集表
@@ -269,6 +269,9 @@ func (itemSet *ItemSet) core() (coreSet *ItemSet) {
 
 // 构造 LR(0) DFA
 func BuildDFA() {
+	// 初始化变迁边表
+	DFA.EdgeSet = map[TransitionKey]*ItemSet{}
+
 	// 找到初始项集
 	// 其应该有且仅有初始符对应的一个核心项
 	initialItem := LR0Item{
@@ -322,11 +325,10 @@ func BuildDFA() {
 			for _, set := range ItemSetTable {
 				if cmp.Equal(set.ItemTable, closureSet.ItemTable) {
 					// 已存在，将新项目集指向已存在的项目集
-					DFA.EdgeTable = append(DFA.EdgeTable, &TransitionEdge{
-						DriverSymbol: driver,
-						FromItemSet:  currItemSet,
-						ToItemSet:    set,
-					})
+					DFA.EdgeSet[struct {
+						DriverSymbol interface{}
+						FromItemSet  *ItemSet
+					}{driver, currItemSet}] = set
 					break
 				}
 			}
@@ -434,7 +436,7 @@ func (set *ItemSet) String() (str string) {
 	return
 }
 
-func (edge *TransitionEdge) String() (str string) {
+func (edge *TransitionKey) String() (str string) {
 	var name string
 	switch driver := edge.DriverSymbol.(type) {
 	case *NonTerminalSymbol:
@@ -444,6 +446,6 @@ func (edge *TransitionEdge) String() (str string) {
 	default:
 		panic("unknown driver type")
 	}
-	str = fmt.Sprintf("State #%v -> #%v, driver: %v", edge.FromItemSet.ID, edge.ToItemSet.ID, name)
+	str = fmt.Sprintf("State from #%v, driver: %v", edge.FromItemSet.ID, name)
 	return
 }

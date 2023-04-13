@@ -328,8 +328,8 @@ func TestBuildLR0DFA(t *testing.T) {
 
 	BuildDFA()
 	t.Log("Start state:", DFA.StartItemSet.ID)
-	for _, edge := range DFA.EdgeTable {
-		t.Log(edge.String())
+	for key, value := range DFA.EdgeSet {
+		t.Logf("%v -> %v", key, value)
 	}
 }
 
