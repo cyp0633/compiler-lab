@@ -19,8 +19,8 @@ var nonSLRExample struct {
 	// S' -> S
 	// S -> A a | b A c | d c | b d a
 	// A -> d
-	S, A, S1   *NonTerminalSymbol
-	a, b, c, d *TerminalSymbol
+	S, A, S1, E *NonTerminalSymbol
+	a, b, c, d  *TerminalSymbol
 }
 
 func initNYUMainExmaple() {
@@ -88,45 +88,52 @@ func initNYUMainExmaple() {
 	}
 
 	// productions
+	// E' \to E
 	nyuMainExample.E1.ProductionTable = []*Production{
 		{
-			ID:         1,
+			ID:         0,
 			BodySize:   1,
 			BodySymbol: []interface{}{nyuMainExample.E},
 		},
 	}
+	// E \to E + T
+	// E \to T
 	nyuMainExample.E.ProductionTable = []*Production{
 		{
-			ID:         2,
+			ID:         1,
 			BodySize:   3,
 			BodySymbol: []interface{}{nyuMainExample.E, nyuMainExample.Plus, nyuMainExample.T},
 		},
 		{
-			ID:         3,
+			ID:         2,
 			BodySize:   1,
 			BodySymbol: []interface{}{nyuMainExample.T},
 		},
 	}
+	// T \to T * F
+	// T \to F
 	nyuMainExample.T.ProductionTable = []*Production{
 		{
-			ID:         4,
+			ID:         3,
 			BodySize:   3,
 			BodySymbol: []interface{}{nyuMainExample.T, nyuMainExample.Mul, nyuMainExample.F},
 		},
 		{
-			ID:         5,
+			ID:         4,
 			BodySize:   1,
 			BodySymbol: []interface{}{nyuMainExample.F},
 		},
 	}
+	// F \to ( E )
+	// F \to id
 	nyuMainExample.F.ProductionTable = []*Production{
 		{
-			ID:         6,
+			ID:         5,
 			BodySize:   3,
 			BodySymbol: []interface{}{nyuMainExample.LeftParenthesis, nyuMainExample.E, nyuMainExample.RightParenthesis},
 		},
 		{
-			ID:         7,
+			ID:         6,
 			BodySize:   1,
 			BodySymbol: []interface{}{nyuMainExample.Id},
 		},
@@ -232,7 +239,7 @@ func TestItemSetClosure(t *testing.T) {
 	// 防止之前的测试影响
 	ItemSetTable = []*ItemSet{}
 
-	GrammarSymbolTable = []interface{}{&nyuMainExample.E1, &nyuMainExample.E, &nyuMainExample.T, &nyuMainExample.F, &nyuMainExample.Plus, &nyuMainExample.Mul, &nyuMainExample.LeftParenthesis, &nyuMainExample.RightParenthesis, &nyuMainExample.Id}
+	GrammarSymbolTable = []interface{}{nyuMainExample.E1, nyuMainExample.E, nyuMainExample.T, nyuMainExample.F, nyuMainExample.Plus, nyuMainExample.Mul, nyuMainExample.LeftParenthesis, nyuMainExample.RightParenthesis, nyuMainExample.Id}
 	// Closure({E' -> .E})
 	set1 := &ItemSet{
 		ID: maxItemSetID() + 1,
@@ -253,7 +260,7 @@ func TestExhaustTransition(t *testing.T) {
 	// 防止之前的测试影响
 	ItemSetTable = []*ItemSet{}
 
-	GrammarSymbolTable = []interface{}{&nyuMainExample.E1, &nyuMainExample.E, &nyuMainExample.T, &nyuMainExample.F, &nyuMainExample.Plus, &nyuMainExample.Mul, &nyuMainExample.LeftParenthesis, &nyuMainExample.RightParenthesis, &nyuMainExample.Id}
+	GrammarSymbolTable = []interface{}{nyuMainExample.E1, nyuMainExample.E, nyuMainExample.T, nyuMainExample.F, nyuMainExample.Plus, nyuMainExample.Mul, nyuMainExample.LeftParenthesis, nyuMainExample.RightParenthesis, nyuMainExample.Id}
 	RootSymbol = nyuMainExample.E1
 	// 初始化第一个状态
 	// E' \to \cdot E 的闭包
@@ -285,7 +292,7 @@ func TestLR0Goto(t *testing.T) {
 	// 防止之前的测试影响
 	ItemSetTable = []*ItemSet{}
 
-	GrammarSymbolTable = []interface{}{&nyuMainExample.E1, &nyuMainExample.E, &nyuMainExample.T, &nyuMainExample.F, &nyuMainExample.Plus, &nyuMainExample.Mul, &nyuMainExample.LeftParenthesis, &nyuMainExample.RightParenthesis, &nyuMainExample.Id}
+	GrammarSymbolTable = []interface{}{nyuMainExample.E1, nyuMainExample.E, nyuMainExample.T, nyuMainExample.F, nyuMainExample.Plus, nyuMainExample.Mul, nyuMainExample.LeftParenthesis, nyuMainExample.RightParenthesis, nyuMainExample.Id}
 	RootSymbol = nyuMainExample.E1
 	// 初始化第一个状态
 	// E' \to \cdot E 的闭包
@@ -310,7 +317,7 @@ func TestBuildLR0DFA(t *testing.T) {
 	// 防止之前的测试影响
 	ItemSetTable = []*ItemSet{}
 
-	GrammarSymbolTable = []interface{}{&nyuMainExample.E1, &nyuMainExample.E, &nyuMainExample.T, &nyuMainExample.F, &nyuMainExample.Plus, &nyuMainExample.Mul, &nyuMainExample.LeftParenthesis, &nyuMainExample.RightParenthesis, &nyuMainExample.Id}
+	GrammarSymbolTable = []interface{}{nyuMainExample.E1, nyuMainExample.E, nyuMainExample.T, nyuMainExample.F, nyuMainExample.Plus, nyuMainExample.Mul, nyuMainExample.LeftParenthesis, nyuMainExample.RightParenthesis, nyuMainExample.Id}
 	RootSymbol = nyuMainExample.E1
 	// 初始化第一个状态
 	// E' \to \cdot E 的闭包
@@ -384,4 +391,36 @@ func TestCheckSLR1(t *testing.T) {
 		t.Error("Example 2 should not be SLR1")
 	}
 
+}
+
+// 测试 LR(0) 分析表
+func TestFillLR0ParsingTable(t *testing.T) {
+	// 防止之前的测试影响
+	ItemSetTable = []*ItemSet{}
+
+	GrammarSymbolTable = []interface{}{nyuMainExample.E1, nyuMainExample.E, nyuMainExample.T, nyuMainExample.F, nyuMainExample.Plus, nyuMainExample.Mul, nyuMainExample.LeftParenthesis, nyuMainExample.RightParenthesis, nyuMainExample.Id}
+	RootSymbol = nyuMainExample.E1
+	// 初始化第一个状态
+	// E' \to \cdot E 的闭包
+	set1 := &ItemSet{
+		ItemTable: map[LR0Item]struct{}{
+			{NonTerminalSymbol: nyuMainExample.E1, Production: nyuMainExample.E1.ProductionTable[0], DotPosition: 0, Type: CoreItem}: {},
+		},
+	}
+	set1 = set1.Closure()
+	ItemSetTable = append(ItemSetTable, set1)
+	for i := 0; i < len(ItemSetTable); i++ {
+		ItemSetTable[i].ExhaustTransition()
+	}
+	BuildDFA()
+
+	FillLR0ParsingTable()
+	t.Log("LR(0) GOTO Table:")
+	for key, value := range GotoTable {
+		t.Logf("State #%v, symbol %v -> state #%v", key.StateID, key.NonTerminalSymbolName, value)
+	}
+	t.Log("LR(0) ACTION Table:")
+	for key, value := range ActionTable {
+		t.Logf("State #%v, symbol %v -> action %v, id %v", key.StateID, key.TerminalSymbolName, value.Type, value.ActionID)
+	}
 }

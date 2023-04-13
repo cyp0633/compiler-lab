@@ -396,6 +396,19 @@ func CheckSLR1() bool {
 // 填写 LR(0) 分析表
 // 需要构造项目集规范族和 DFA
 func FillLR0ParsingTable() {
+	// 初始化分析表
+	ActionTable = map[struct {
+		StateID            int
+		TerminalSymbolName string
+	}]struct {
+		Type     ActionCategory
+		ActionID int
+	}{}
+	GotoTable = map[struct {
+		StateID               int
+		NonTerminalSymbolName string
+	}]int{}
+
 	// 非终结符，GOTO 列
 	nonTerminals := map[string]struct{}{}
 	// 终结符，ACTION 列
@@ -403,9 +416,9 @@ func FillLR0ParsingTable() {
 	// 遍历语法符表，填入所有的终结符和非终结符
 	for _, symbol := range GrammarSymbolTable {
 		switch symbol := symbol.(type) {
-		case NonTerminalSymbol:
+		case *NonTerminalSymbol:
 			nonTerminals[symbol.Name] = struct{}{}
-		case TerminalSymbol:
+		case *TerminalSymbol:
 			terminals[symbol.Name] = struct{}{}
 		default:
 			panic("unknown symbol type")
@@ -423,6 +436,12 @@ func FillLR0ParsingTable() {
 			if item.NonTerminalSymbol == RootSymbol && item.DotPosition == len(item.Production.BodySymbol) {
 				// 接受项目 S' \to S \cdot
 				// ACTION[i,#] = accept
+				if _, ok := ActionTable[struct {
+					StateID            int
+					TerminalSymbolName string
+				}{itemSet.ID, "#"}]; ok {
+					fmt.Println("duplicate action, not LR0")
+				}
 				ActionTable[struct {
 					StateID            int
 					TerminalSymbolName string
@@ -434,6 +453,12 @@ func FillLR0ParsingTable() {
 				// 归约项目 A \to \alpha \cdot
 				// 对所有非终结符 a 或 #，ACTION[i,a] = reduce j
 				for symbol := range terminals {
+					if _, ok := ActionTable[struct {
+						StateID            int
+						TerminalSymbolName string
+					}{itemSet.ID, symbol}]; ok {
+						fmt.Println("duplicate action, not LR0")
+					}
 					ActionTable[struct {
 						StateID            int
 						TerminalSymbolName string
@@ -446,6 +471,12 @@ func FillLR0ParsingTable() {
 				// 移进项目 A \to \alpha \cdot a \beta
 				// action[i,a] = shift j
 				targetState := DFA.EdgeSet[TransitionKey{symbol, itemSet}]
+				if _, ok := ActionTable[struct {
+					StateID            int
+					TerminalSymbolName string
+				}{itemSet.ID, symbol.Name}]; ok {
+					fmt.Println("duplicate action, not LR0")
+				}
 				ActionTable[struct {
 					StateID            int
 					TerminalSymbolName string
@@ -457,6 +488,12 @@ func FillLR0ParsingTable() {
 				// 待约项目 A \to \alpha \cdot B
 				// goto[i,B] = j
 				targetState := DFA.EdgeSet[TransitionKey{symbol, itemSet}]
+				if _, ok := GotoTable[struct {
+					StateID               int
+					NonTerminalSymbolName string
+				}{itemSet.ID, symbol.Name}]; ok {
+					fmt.Println("duplicate goto, not LR0")
+				}
 				GotoTable[struct {
 					StateID               int
 					NonTerminalSymbolName string

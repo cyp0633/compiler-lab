@@ -47,6 +47,7 @@ type Production struct {
 }
 
 // 文法符表
+// 填写文法符的指针
 var GrammarSymbolTable = []interface{}{}
 
 // 开始符
