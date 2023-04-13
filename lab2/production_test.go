@@ -13,6 +13,7 @@ func TestMain(m *testing.M) {
 	initLeftFactorExample()
 	initLL1Example()
 	initNYUMainExmaple()
+	initNonSLRExmaple()
 	code := m.Run()
 	os.Exit(code)
 }

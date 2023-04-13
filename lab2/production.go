@@ -191,11 +191,10 @@ func First(s interface{}) (m map[interface{}]bool) {
 func Follow() {
 	// 初始化 FOLLOW 集合
 	for _, A := range GrammarSymbolTable {
-		// 如果不是非终结符，跳过
-		if reflect.TypeOf(A) != reflect.TypeOf(RootSymbol) {
-			continue
+		// 对非终结符，make 一下
+		if A, ok := A.(*NonTerminalSymbol); ok {
+			A.FollowSet = make(map[interface{}]bool)
 		}
-		A.(*NonTerminalSymbol).FollowSet = make(map[interface{}]bool)
 	}
 
 	// 找到初始符，加入 #

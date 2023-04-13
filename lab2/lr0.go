@@ -360,7 +360,7 @@ func CheckSLR1() bool {
 
 		// 如果归约和移进二者至多存在一种，则是LR(0)，更是 SLR(1)
 		if (len(reduceSet) == 0) != (len(shiftSymbols) == 0) {
-			return true
+			continue
 		}
 
 		// 否则，求交集
