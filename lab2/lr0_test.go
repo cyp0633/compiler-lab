@@ -201,3 +201,31 @@ func TestLR0Goto(t *testing.T) {
 		t.Error("goto1 should have 2 elements")
 	}
 }
+
+// 测试构造 DFA
+func TestBuildLR0DFA(t *testing.T) {
+	// 防止之前的测试影响
+	ItemSetTable = []*ItemSet{}
+
+	GrammarSymbolTable = []interface{}{&nyuMainExample.E1, &nyuMainExample.E, &nyuMainExample.T, &nyuMainExample.F, &nyuMainExample.Plus, &nyuMainExample.Mul, &nyuMainExample.LeftParenthesis, &nyuMainExample.RightParenthesis, &nyuMainExample.Id}
+	RootSymbol = nyuMainExample.E1
+	// 初始化第一个状态
+	// E' \to \cdot E 的闭包
+	set1 := &ItemSet{
+		ItemTable: map[LR0Item]struct{}{
+			{NonTerminalSymbol: nyuMainExample.E1, Production: nyuMainExample.E1.ProductionTable[0], DotPosition: 0, Type: CoreItem}: {},
+		},
+	}
+	set1 = set1.Closure()
+	ItemSetTable = append(ItemSetTable, set1)
+	for i := 0; i < len(ItemSetTable); i++ {
+		t.Log(ItemSetTable[i].String())
+		ItemSetTable[i].ExhaustTransition()
+	}
+
+	BuildDFA()
+	t.Log("Start state:", DFA.StartItemSet.ID)
+	for _, edge := range DFA.EdgeTable {
+		t.Log(edge.String())
+	}
+}

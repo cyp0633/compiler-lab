@@ -36,9 +36,9 @@ type ItemSet struct {
 
 // 变迁边
 type TransitionEdge struct {
-	DriverSymbol *GrammarSymbol // 转换符
-	FromItemSet  *ItemSet       // 起始状态
-	ToItemSet    *ItemSet       // 终止状态
+	DriverSymbol interface{} // 转换符，某个语法符的指针
+	FromItemSet  *ItemSet    // 起始状态
+	ToItemSet    *ItemSet    // 终止状态
 }
 
 // LR(0) 自动机
@@ -284,8 +284,53 @@ func BuildDFA() {
 	}
 
 	// 遍历项目集规范族
-	for _, itemSet := range ItemSetTable {
+	for _, currItemSet := range ItemSetTable {
+		drivers := currItemSet.driver()
 
+		// 对每一种驱动符，新建一个项目集
+		// key 为驱动符，一个指针
+		newItemSets := map[interface{}]*ItemSet{}
+		for driver := range drivers {
+			newItemSets[driver] = &ItemSet{ItemTable: map[LR0Item]struct{}{}}
+		}
+
+		// 遍历项目集中的每个项目，求出 GOTO 的核心项
+		for item := range currItemSet.ItemTable {
+			// 如果已经是归约/接受项目（A \to \cdot \alpha），则不需要变迁
+			if item.DotPosition == len(item.Production.BodySymbol) {
+				continue
+			}
+			// 取出该驱动符对应的项目集
+			itemSet := newItemSets[item.Production.BodySymbol[item.DotPosition]].ItemTable
+			// 将项目 item 的点后移一位
+			// 新的项目！
+			item1 := LR0Item{
+				NonTerminalSymbol: item.NonTerminalSymbol,
+				Production:        item.Production,
+				DotPosition:       item.DotPosition + 1,
+				Type:              CoreItem, // 一定是核心项啦
+			}
+			// 将新项目加入项目集
+			itemSet[item1] = struct{}{}
+		}
+
+		// 对每个新项目集，找出对应的 DFA 状态，关联驱动符
+		for driver, newItemSet := range newItemSets {
+			// 求 Closure
+			closureSet := newItemSet.Closure()
+			// 寻找已知的项集（状态）
+			for _, set := range ItemSetTable {
+				if cmp.Equal(set.ItemTable, closureSet.ItemTable) {
+					// 已存在，将新项目集指向已存在的项目集
+					DFA.EdgeTable = append(DFA.EdgeTable, &TransitionEdge{
+						DriverSymbol: driver,
+						FromItemSet:  currItemSet,
+						ToItemSet:    set,
+					})
+					break
+				}
+			}
+		}
 	}
 }
 
@@ -329,5 +374,19 @@ func (set *ItemSet) String() (str string) {
 	for item := range set.ItemTable {
 		str += item.String() + "\n"
 	}
+	return
+}
+
+func (edge *TransitionEdge) String() (str string) {
+	var name string
+	switch driver := edge.DriverSymbol.(type) {
+	case *NonTerminalSymbol:
+		name = "nonterminal " + driver.Name
+	case *TerminalSymbol:
+		name = "terminal " + driver.Name
+	default:
+		panic("unknown driver type")
+	}
+	str = fmt.Sprintf("State #%v -> #%v, driver: %v", edge.FromItemSet.ID, edge.ToItemSet.ID, name)
 	return
 }
