@@ -393,6 +393,79 @@ func CheckSLR1() bool {
 	return true
 }
 
+// 填写 LR(0) 分析表
+// 需要构造项目集规范族和 DFA
+func FillLR0ParsingTable() {
+	// 非终结符，GOTO 列
+	nonTerminals := map[string]struct{}{}
+	// 终结符，ACTION 列
+	terminals := map[string]struct{}{}
+	// 遍历语法符表，填入所有的终结符和非终结符
+	for _, symbol := range GrammarSymbolTable {
+		switch symbol := symbol.(type) {
+		case NonTerminalSymbol:
+			nonTerminals[symbol.Name] = struct{}{}
+		case TerminalSymbol:
+			terminals[symbol.Name] = struct{}{}
+		default:
+			panic("unknown symbol type")
+		}
+	}
+	// 加入 # 终结符
+	terminals["#"] = struct{}{}
+
+	// 遍历项目集规范族
+	for _, itemSet := range ItemSetTable {
+		// 对其中的每个项目
+		for item := range itemSet.ItemTable {
+			// 判断项目类型
+			// 为什么不用一个 switch？因为特么的 go 不支持 switch 里做声明
+			if item.NonTerminalSymbol == RootSymbol && item.DotPosition == len(item.Production.BodySymbol) {
+				// 接受项目 S' \to S \cdot
+				// ACTION[i,#] = accept
+				ActionTable[struct {
+					StateID            int
+					TerminalSymbolName string
+				}{itemSet.ID, "#"}] = struct {
+					Type     ActionCategory
+					ActionID int
+				}{Accept, -1}
+			} else if item.DotPosition == len(item.Production.BodySymbol) {
+				// 归约项目 A \to \alpha \cdot
+				// 对所有非终结符 a 或 #，ACTION[i,a] = reduce j
+				for symbol := range terminals {
+					ActionTable[struct {
+						StateID            int
+						TerminalSymbolName string
+					}{itemSet.ID, symbol}] = struct {
+						Type     ActionCategory
+						ActionID int
+					}{Reduce, item.Production.ID}
+				}
+			} else if symbol, ok := item.Production.BodySymbol[item.DotPosition].(*TerminalSymbol); ok {
+				// 移进项目 A \to \alpha \cdot a \beta
+				// action[i,a] = shift j
+				targetState := DFA.EdgeSet[TransitionKey{symbol, itemSet}]
+				ActionTable[struct {
+					StateID            int
+					TerminalSymbolName string
+				}{itemSet.ID, symbol.Name}] = struct {
+					Type     ActionCategory
+					ActionID int
+				}{Shift, targetState.ID}
+			} else if symbol, ok := item.Production.BodySymbol[item.DotPosition].(*NonTerminalSymbol); ok {
+				// 待约项目 A \to \alpha \cdot B
+				// goto[i,B] = j
+				targetState := DFA.EdgeSet[TransitionKey{symbol, itemSet}]
+				GotoTable[struct {
+					StateID               int
+					NonTerminalSymbolName string
+				}{itemSet.ID, symbol.Name}] = targetState.ID
+			}
+		}
+	}
+}
+
 // 项目集表的最大 ID
 func maxItemSetID() (maxID int) {
 	if len(ItemSetTable) == 0 {
