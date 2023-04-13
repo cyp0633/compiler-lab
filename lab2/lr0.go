@@ -42,7 +42,7 @@ type TransitionEdge struct {
 }
 
 // LR(0) 自动机
-type DFA struct {
+var DFA struct {
 	// 开始项集
 	StartItemSet *ItemSet
 	// 变迁边表
@@ -152,6 +152,8 @@ func copyItemSet(itemSet *ItemSet) (newItemSet *ItemSet) {
 }
 
 // 项目集的 Goto 函数
+//
+// 需要自行进行 Closure！！！
 func (itemSet *ItemSet) Goto(X interface{}) (gotoSet *ItemSet) {
 	gotoSet = &ItemSet{
 		ID:        itemSet.ID,
@@ -263,6 +265,28 @@ func (itemSet *ItemSet) core() (coreSet *ItemSet) {
 		}
 	}
 	return
+}
+
+// 构造 LR(0) DFA
+func BuildDFA() {
+	// 找到初始项集
+	// 其应该有且仅有初始符对应的一个核心项
+	initialItem := LR0Item{
+		NonTerminalSymbol: RootSymbol,
+		Production:        RootSymbol.ProductionTable[0],
+		DotPosition:       0,
+		Type:              CoreItem,
+	}
+	for _, itemSet := range ItemSetTable {
+		if _, ok := itemSet.ItemTable[initialItem]; ok {
+			DFA.StartItemSet = itemSet
+		}
+	}
+
+	// 遍历项目集规范族
+	for _, itemSet := range ItemSetTable {
+
+	}
 }
 
 // 项目集表的最大 ID
