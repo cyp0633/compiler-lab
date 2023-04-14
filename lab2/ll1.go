@@ -195,6 +195,9 @@ func ExtractLeftFactor() {
 					BodySize:   production.BodySize - len(extendFactor),
 					ID:         production.ID, // 可以循环利用，反正这个后面会删掉
 				}
+				if newProduction.BodySize == 0 {
+					newProduction.BodySymbol = []interface{}{&epsilonSymbol}
+				}
 				newSymbol.ProductionTable[index] = newProduction
 			}
 
@@ -202,12 +205,18 @@ func ExtractLeftFactor() {
 			index := 0
 			// 因为 prods 是按照 ProductionTable 的顺序排列的
 			// 所以可以直接用一个 index 一起
-			for originalIndex, production := range symbol.ProductionTable {
+			for originalIndex := 0; originalIndex < len(symbol.ProductionTable); originalIndex++ {
+				if index >= len(prods) {
+					break
+				}
+				production := symbol.ProductionTable[originalIndex]
 				if !cmp.Equal(production, prods[index]) {
 					continue
 				}
 				// 直接删掉
 				symbol.ProductionTable = append(symbol.ProductionTable[:originalIndex], symbol.ProductionTable[originalIndex+1:]...)
+				originalIndex--
+				index++
 			}
 			// 添加一个 A \to \alpha A'
 			symbol.ProductionTable = append(symbol.ProductionTable, &Production{

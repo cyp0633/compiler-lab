@@ -163,14 +163,17 @@ func initLeftFactorExample() {
 	// productions
 	// S -> if E then S | if E then S else S | Other
 	leftFactorExample.S.ProductionTable = append(leftFactorExample.S.ProductionTable, &Production{
+		ID:         0,
 		BodySize:   4,
 		BodySymbol: []interface{}{&leftFactorExample.If, &leftFactorExample.E, &leftFactorExample.Then, &leftFactorExample.S},
 	})
 	leftFactorExample.S.ProductionTable = append(leftFactorExample.S.ProductionTable, &Production{
+		ID:         1,
 		BodySize:   6,
 		BodySymbol: []interface{}{&leftFactorExample.If, &leftFactorExample.E, &leftFactorExample.Then, &leftFactorExample.S, &leftFactorExample.Else, &leftFactorExample.S},
 	})
 	leftFactorExample.S.ProductionTable = append(leftFactorExample.S.ProductionTable, &Production{
+		ID:         2,
 		BodySize:   1,
 		BodySymbol: []interface{}{&leftFactorExample.Other},
 	})
@@ -392,5 +395,27 @@ func TestBuildLL1AnalysisTable(t *testing.T) {
 		string
 	}{&testData1.F, "("}] != testData1.F.ProductionTable[0] {
 		t.Error("F, ( = F -> ( E ) not found")
+	}
+}
+
+// 测试提取左因子
+func TestExtractLeftFactor(t *testing.T) {
+	GrammarSymbolTable = []interface{}{&leftFactorExample.S, &leftFactorExample.E, &leftFactorExample.If, &leftFactorExample.Else, &leftFactorExample.Other}
+	RootSymbol = &leftFactorExample.S
+
+	if !leftFactorExample.S.LeftFactored() {
+		t.Error("TestExtractLeftFactor failed")
+	}
+
+	ExtractLeftFactor()
+
+	for _, symbol := range GrammarSymbolTable {
+		if symbol, ok := symbol.(*NonTerminalSymbol); ok {
+			t.Log(symbol.String())
+		}
+	}
+
+	if leftFactorExample.S.LeftFactored() {
+		t.Error("TestExtractLeftFactor failed")
 	}
 }
