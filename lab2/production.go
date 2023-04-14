@@ -265,6 +265,21 @@ func Follow() {
 	}
 }
 
+// 返回最大的产生式 ID
+func maxProdID() (maxID int) {
+	maxID = -1
+	for _, nt := range GrammarSymbolTable {
+		if nt, ok := nt.(*NonTerminalSymbol); ok {
+			for _, prod := range nt.ProductionTable {
+				if prod.ID > maxID {
+					maxID = prod.ID
+				}
+			}
+		}
+	}
+	return
+}
+
 func (t symbolType) String() string {
 	switch t {
 	case NonTerminal:
