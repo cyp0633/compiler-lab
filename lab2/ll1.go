@@ -125,7 +125,99 @@ func checkLeftRecursion(rec map[string]bool, curr *NonTerminalSymbol) bool {
 }
 
 // 提取左因子
+// 这个不用先检测
 func ExtractLeftFactor() {
+	// 对每个非终结符提取左因子
+	for _, symbol := range GrammarSymbolTable {
+		symbol, ok := symbol.(*NonTerminalSymbol)
+		if !ok {
+			continue
+		}
+
+		// 循环直到没有左因子
+		for symbol.LeftFactored() {
+			// 统计每个左因子的产生式数量
+			// map 的 key 是文法符指针
+			m := map[interface{}][]*Production{}
+			for _, production := range symbol.ProductionTable {
+				symbol := production.BodySymbol[0]
+				m[symbol] = append(m[symbol], production)
+			}
+
+			// 找出数量最多的左因子
+			var maxLeftFactor interface{}
+			maxCount := 0
+			for leftFactor, productions := range m {
+				if len(productions) > maxCount {
+					maxLeftFactor = leftFactor
+					maxCount = len(productions)
+				}
+			}
+			// 要扩展的左因子的产生式 slice
+			prods := m[maxLeftFactor]
+
+			// 生成新的非终结符
+			newSymbol := &NonTerminalSymbol{
+				GrammarSymbol: GrammarSymbol{
+					Name: symbol.Name + "'",
+					Type: NonTerminal,
+				},
+				NumOfProduction: maxCount,
+				ProductionTable: make([]*Production, maxCount),
+			}
+			GrammarSymbolTable = append(GrammarSymbolTable, newSymbol)
+
+			// 在有公因子的产生式数量不变的情况下，试着扩展左因子长度
+			extendFactor := []interface{}{maxLeftFactor}
+		extend:
+			for {
+				// 本轮扩展使用的左因子
+				if len(prods[0].BodySymbol) < len(extendFactor)+1 {
+					break extend
+				}
+				candidate := prods[0].BodySymbol[len(extendFactor)]
+
+				// 检查每个产生式是否也能扩展
+				for _, production := range prods {
+					if len(production.BodySymbol) < len(extendFactor)+1 || !cmp.Equal(production.BodySymbol[len(extendFactor)], candidate) {
+						break extend
+					}
+				}
+
+				// 一直没 break，那就是可以扩展
+				extendFactor = append(extendFactor, candidate)
+			}
+
+			// 生成新的产生式
+			for index, production := range prods {
+				newProduction := &Production{
+					BodySymbol: production.BodySymbol[len(extendFactor):],
+					BodySize:   production.BodySize - len(extendFactor),
+					ID:         production.ID, // 可以循环利用，反正这个后面会删掉
+				}
+				newSymbol.ProductionTable[index] = newProduction
+			}
+
+			// 调整旧的文法符
+			index := 0
+			// 因为 prods 是按照 ProductionTable 的顺序排列的
+			// 所以可以直接用一个 index 一起
+			for originalIndex, production := range symbol.ProductionTable {
+				if !cmp.Equal(production, prods[index]) {
+					continue
+				}
+				// 直接删掉
+				symbol.ProductionTable = append(symbol.ProductionTable[:originalIndex], symbol.ProductionTable[originalIndex+1:]...)
+			}
+			// 添加一个 A \to \alpha A'
+			symbol.ProductionTable = append(symbol.ProductionTable, &Production{
+				BodySymbol: append(extendFactor, newSymbol),
+				BodySize:   len(extendFactor) + 1,
+				ID:         maxProdID() + 1,
+			})
+			symbol.NumOfProduction = len(symbol.ProductionTable)
+		}
+	}
 }
 
 // 检测左因子
