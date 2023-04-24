@@ -52,7 +52,8 @@ func getNextChar() (byte, error) {
 	if linePos >= len(lineBuf) {
 		lineNo++
 		ok := sourceScanner.Scan()
-		if !ok {
+		if !ok { // 文件末尾
+			eof = true
 			return 0, io.EOF
 		}
 		lineBuf = sourceScanner.Text()
@@ -83,15 +84,11 @@ func GetToken() tokenType {
 	// 如一串数字要保存，但空格啊回车之类的不用
 	save := false
 	for state != done {
+		save = true
 		c, err := getNextChar()
 		// 根据当前状态和读取到的字符决定下一步的操作
 		switch state {
 		case start:
-			if err == io.EOF {
-				save = false
-				currToken = eofToken
-				break
-			}
 			if c >= '0' && c <= '9' {
 				// 数字
 				state = inNum
@@ -111,6 +108,11 @@ func GetToken() tokenType {
 				save = false
 			} else {
 				state = done
+				if err == io.EOF {
+					save = false
+					currToken = eofToken
+					break
+				}
 				switch c {
 				case '=':
 					currToken = eqToken
@@ -187,7 +189,7 @@ func GetToken() tokenType {
 			}
 		}
 	}
-	fmt.Printf("\t%d: %v\t%v", lineNo, currToken, tokenString)
+	fmt.Printf("\t%d: %v\t%v\n", lineNo, currToken.String(), tokenString)
 	return currToken
 }
 
