@@ -1,7 +1,10 @@
 // 实验三：词法分析器构造工具的实现
 package lab3
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 // 词法分析器 DFA 的状态
 type stateType int
@@ -13,7 +16,7 @@ const (
 	inComment           // { ... }
 	inNum               // 123
 	inId                // abc
-	inDone              // 结束
+	done                // 结束
 )
 
 // 当前行
@@ -21,9 +24,6 @@ var lineBuf string = ""
 
 // lineBuf 中当前字符的位置
 var linePos int = 0
-
-// 当前行数
-var lineNo int = 0
 
 // 是否已经读取到文件末尾
 var eof bool = false
@@ -39,11 +39,12 @@ var reservedWords = map[string]tokenType{
 	"read":   readToken,
 	"write":  writeToken,
 }
+
 // map 类型又不需要查找函数了
 
 // getNextChar 从 lineBuf 中读取一个字符，
 // 如果 lineBuf 为空则从输入流中读取一行
-func getNextChar() int {
+func getNextChar() (byte, error) {
 	// 本行已经读取完毕
 	if linePos >= len(lineBuf) {
 		lineNo++
@@ -51,20 +52,148 @@ func getNextChar() int {
 		n, err := fmt.Scanf("%s", &lineBuf)
 		if err != nil {
 			fmt.Println(err)
+			return 0, err
 		}
 		if n == 0 { // 读取到文件尾
 			eof = true
-			return -1
+			return 0, io.EOF
 		}
 		linePos = 1
-		return int(lineBuf[0])
+		return lineBuf[0], nil
 	} else {
 		linePos++
-		return int(lineBuf[linePos-1])
+		return lineBuf[linePos-1], nil
 	}
 }
 
 // ungetNextChar 将 lineBuf 中的一个字符退回
 func ungetNextChar() {
-	linePos--
+	if !eof {
+		linePos--
+	}
+}
+
+// getToken 从源文件中读取一个 token
+func GetToken() tokenType {
+	// 当前状态
+	state := start
+	// 当前 token 类型
+	var currToken tokenType
+	// 当前 token 内容
+	tokenString := ""
+	// 是否将当前字符保存到 tokenString 中
+	// 如一串数字要保存，但空格啊回车之类的不用
+	save := false
+	for state != done {
+		c, err := getNextChar()
+		// 根据当前状态和读取到的字符决定下一步的操作
+		switch state {
+		case start:
+			if err == io.EOF {
+				save = false
+				currToken = eofToken
+				break
+			}
+			if c >= '0' && c <= '9' {
+				// 数字
+				state = inNum
+			} else if isAlpha(c) {
+				// 字母
+				// 先输进来再判断是不是保留字
+				state = inId
+			} else if c == '{' {
+				// 注释
+				save = false
+				state = inComment
+			} else if c == ':' {
+				// 只有赋值才用到冒号
+				state = inAssign
+			} else if c == ' ' || c == '\n' || c == '\t' {
+				// 空格，回车，tab
+				save = false
+			} else {
+				state = done
+				switch c {
+				case '=':
+					currToken = eqToken
+				case '<':
+					currToken = ltToken
+				case '+':
+					currToken = plusToken
+				case '-':
+					currToken = minusToken
+				case '*':
+					currToken = timesToken
+				case '/':
+					currToken = overToken
+				case '(':
+					currToken = lparenToken
+				case ')':
+					currToken = rparenToken
+				case ';':
+					currToken = semicolonToken
+				default:
+					currToken = errorToken
+				}
+			}
+		case inComment:
+			save = false
+			if err == io.EOF {
+				state = done
+				currToken = eofToken
+			} else if c == '}' {
+				state = start
+			}
+		case inAssign:
+			state = done
+			if c == '=' {
+				currToken = assignToken
+			} else {
+				// 并不是一个赋值语句
+				ungetNextChar()
+				save = false
+				currToken = errorToken
+			}
+		case inNum:
+			if c < '0' || c > '9' {
+				// 数字结束
+				ungetNextChar()
+				save = false
+				state = done
+				currToken = numToken
+			}
+		case inId:
+			if !isAlpha(c) {
+				// 字母结束
+				ungetNextChar()
+				save = false
+				state = done
+				currToken = idToken
+			}
+		default:
+			// 包含 done
+			// 发生错误
+			fmt.Println("Scanner Bug: state = ", state)
+			state = done
+			currToken = errorToken
+		}
+		if save {
+			tokenString += string(c)
+		}
+		if state == done {
+			if currToken == idToken {
+				// 判断是否为保留字
+				if tokenType, ok := reservedWords[tokenString]; ok {
+					currToken = tokenType
+				}
+			}
+		}
+	}
+	fmt.Printf("\t%d: %v\t%v", lineNo, currToken, tokenString)
+	return currToken
+}
+
+// 判断是否为字母
+func isAlpha(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
 }
