@@ -2,6 +2,7 @@
 package lab3
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 )
@@ -28,6 +29,8 @@ var linePos int = 0
 // 是否已经读取到文件末尾
 var eof bool = false
 
+var sourceScanner *bufio.Scanner
+
 // 保留词表
 var reservedWords = map[string]tokenType{
 	"if":     ifToken,
@@ -48,16 +51,11 @@ func getNextChar() (byte, error) {
 	// 本行已经读取完毕
 	if linePos >= len(lineBuf) {
 		lineNo++
-		// TODO: 替换为从文件中读取一行
-		n, err := fmt.Scanf("%s", &lineBuf)
-		if err != nil {
-			fmt.Println(err)
-			return 0, err
-		}
-		if n == 0 { // 读取到文件尾
-			eof = true
+		ok := sourceScanner.Scan()
+		if !ok {
 			return 0, io.EOF
 		}
+		lineBuf = sourceScanner.Text()
 		linePos = 1
 		return lineBuf[0], nil
 	} else {
