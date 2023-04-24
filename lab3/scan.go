@@ -30,7 +30,16 @@ var eof bool = false
 
 // 保留词表
 var reservedWords = map[string]tokenType{
+	"if":     ifToken,
+	"then":   thenToken,
+	"else":   elseToken,
+	"end":    endToken,
+	"repeat": repeatToken,
+	"until":  untilToken,
+	"read":   readToken,
+	"write":  writeToken,
 }
+// map 类型又不需要查找函数了
 
 // getNextChar 从 lineBuf 中读取一个字符，
 // 如果 lineBuf 为空则从输入流中读取一行
@@ -59,4 +68,3 @@ func getNextChar() int {
 func ungetNextChar() {
 	linePos--
 }
-
