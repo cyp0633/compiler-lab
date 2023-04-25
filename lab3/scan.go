@@ -53,8 +53,17 @@ func getNextChar() (byte, error) {
 		lineNo++
 		ok := sourceScanner.Scan()
 		if !ok { // 文件末尾
-			eof = true
-			return 0, io.EOF
+			err := sourceScanner.Err()
+			if err == nil {
+				// EOF 的话不会返回 err
+				eof = true
+				return 0, io.EOF
+			} else {
+				// 真的出现错误了
+				lineBuf = ""
+				linePos = 0
+				return 0, err
+			}
 		}
 		lineBuf = sourceScanner.Text()
 		linePos = 1
