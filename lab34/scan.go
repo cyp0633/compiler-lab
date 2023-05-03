@@ -1,5 +1,5 @@
 // 实验三：词法分析器构造工具的实现
-package lab3
+package lab34
 
 import (
 	"bufio"
