@@ -1,5 +1,9 @@
 // 实验三：词法分析器构造工具的实现
+//
+// 实验四：TINY 语言编译器的实现
 package lab34
+
+// scan.go 词法分析器
 
 import (
 	"bufio"
