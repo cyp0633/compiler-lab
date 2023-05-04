@@ -62,9 +62,9 @@ type treeNode struct {
 var currToken tokenType
 
 func Parse() (t *treeNode) {
-	token := GetToken()
+	currToken= GetToken()
 	t = stmtSequence()
-	if token != eofToken {
+	if currToken != eofToken {
 		syntaxError("Code ends before file\n")
 	}
 	return
