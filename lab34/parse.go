@@ -1,6 +1,9 @@
 package lab34
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 // parse.go 语法分析器
 
@@ -58,7 +61,7 @@ type treeNode struct {
 // 当前 token
 var currToken tokenType
 
-func parse() (t *treeNode) {
+func Parse() (t *treeNode) {
 	token := GetToken()
 	t = stmtSequence()
 	if token != eofToken {
@@ -121,6 +124,9 @@ func statement() *treeNode {
 	return t
 }
 
+// if 语句的匹配
+//
+// if <expression> then <stmtSequence> [else <stmtSequence>] end
 func ifStatement() *treeNode {
 	t := newStatementNode(ifStmt)
 	match(ifToken)
@@ -135,39 +141,131 @@ func ifStatement() *treeNode {
 	return t
 }
 
+// repeat 语句的匹配
+//
+// repeat <stmtSequence> until <expression>
 func repeatStatement() *treeNode {
-	return nil
+	t := newStatementNode(repeatStmt)
+	match(repeatToken)
+	t.child[0] = stmtSequence()
+	match(untilToken)
+	t.child[1] = expression()
+	return t
 }
 
+// 赋值语句的匹配
+//
+// <id> := <expression>
 func assignStatement() *treeNode {
-	return nil
+	t := newStatementNode(assignStmt)
+	if currToken == idToken {
+		t.attr = tokenString
+	}
+	match(idToken)
+	match(assignToken)
+	t.child[0] = expression()
+	return t
 }
 
+// read 语句的匹配
+//
+// read <id>
 func readStatement() *treeNode {
-	return nil
+	t := newStatementNode(readStmt)
+	match(readToken)
+	if currToken == idToken {
+		t.attr = tokenString
+	}
+	match(idToken)
+	return t
 }
 
+// write 语句的匹配
+//
+// write <expression>
 func writeStatement() *treeNode {
-	return nil
+	t := newStatementNode(writeStmt)
+	match(writeToken)
+	t.child[0] = expression()
+	return t
 }
 
+// 表达式的匹配：处理 < 和 = 运算符
+// 优先级最低
 func expression() *treeNode {
-	return nil
+	t := simpleExpression()
+	if currToken == ltToken || currToken == eqToken {
+		p := newExpressionNode(opExpr)
+		p.child[0] = t
+		p.op = currToken
+		t = p
+		match(currToken)
+		t.child[1] = simpleExpression()
+	}
+	return t
 }
 
+// 表达式的匹配：处理 + 和 - 运算符
+// 优先级中等
 func simpleExpression() *treeNode {
-	return nil
+	t := term()
+	for currToken == plusToken || currToken == minusToken {
+		p := newExpressionNode(opExpr)
+		p.child[0] = t
+		p.op = currToken
+		t = p
+		match(currToken)
+		t.child[1] = term()
+	}
+	return t
 }
 
+// 表达式的匹配：处理 * 和 / 运算符
+// 优先级最高
 func term() *treeNode {
-	return nil
+	t := factor()
+	for currToken == timesToken || currToken == overToken {
+		p := newExpressionNode(opExpr)
+		p.child[0] = t
+		p.op = currToken
+		t = p
+		match(currToken)
+		t.child[1] = factor()
+	}
+	return t
 }
 
-func factor() *treeNode {
-	return nil
+// 表达式的匹配：处理数字、标识符和括号
+func factor() (t *treeNode) {
+	switch currToken {
+	case numToken:
+		t = newExpressionNode(constExpr)
+		if currToken == numToken {
+			var err error
+			t.val, err = strconv.Atoi(tokenString)
+			if err != nil {
+				syntaxError("unexpected token -> %s" + currToken.String())
+			}
+			match(numToken)
+		}
+	case idToken:
+		t = newExpressionNode(idExpr)
+		if currToken == idToken {
+			t.attr = tokenString
+		}
+		match(idToken)
+	case lparenToken:
+		match(lparenToken)
+		t = expression()
+		match(rparenToken)
+	default:
+		syntaxError("unexpected token -> %s" + currToken.String())
+		currToken = GetToken()
+	}
+	return
 }
 
-// 新建一个语法树声明节点
+// 新建一个语法树语句节点
 func newStatementNode(kind stmtKind) *treeNode {
 	return &treeNode{
 		child:   [3]*treeNode{},

@@ -33,7 +33,11 @@ var linePos int = 0
 // 是否已经读取到文件末尾
 var eof bool = false
 
+// 源代码 scanner
 var sourceScanner *bufio.Scanner
+
+// 当前 token 内容
+var tokenString = ""
 
 // 保留词表
 var reservedWords = map[string]tokenType{
@@ -91,8 +95,7 @@ func GetToken() tokenType {
 	state := start
 	// 当前 token 类型
 	var currToken tokenType
-	// 当前 token 内容
-	tokenString := ""
+
 	// 是否将当前字符保存到 tokenString 中
 	// 如一串数字要保存，但空格啊回车之类的不用
 	save := false
