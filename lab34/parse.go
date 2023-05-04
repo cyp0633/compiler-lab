@@ -31,8 +31,11 @@ const (
 type exprKind int
 
 const (
+	// 运算符
 	opExpr exprKind = iota
+	// 常量
 	constExpr
+	// 变量标识符
 	idExpr
 )
 
@@ -40,7 +43,9 @@ const (
 type nodeKind int
 
 const (
+	// 语句
 	stmtNode nodeKind = iota
+	// 表达式
 	exprNode
 )
 
@@ -62,7 +67,7 @@ type treeNode struct {
 var currToken tokenType
 
 func Parse() (t *treeNode) {
-	currToken= GetToken()
+	currToken = GetToken()
 	t = stmtSequence()
 	if currToken != eofToken {
 		syntaxError("Code ends before file\n")
