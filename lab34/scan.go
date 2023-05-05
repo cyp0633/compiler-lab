@@ -95,6 +95,8 @@ func GetToken() tokenType {
 	state := start
 	// 当前 token 类型
 	var currToken tokenType
+	// 清空当前 token 字符串
+	tokenString = ""
 
 	// 是否将当前字符保存到 tokenString 中
 	// 如一串数字要保存，但空格啊回车之类的不用
