@@ -8,7 +8,10 @@ import "fmt"
 var symtab map[string]struct {
 	refLines []int // 引用行号列表
 	memLoc   int   // 内存位置
-}
+} = make(map[string]struct {
+	refLines []int
+	memLoc   int
+})
 
 // 当前使用的内存位置
 var memLoc int = 0
