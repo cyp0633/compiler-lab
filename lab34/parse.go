@@ -292,3 +292,43 @@ func newExpressionNode(kind exprKind) *treeNode {
 		typ:     voidExpr,
 	}
 }
+
+// 打印语法树
+func PrintTree(t *treeNode, indentNo int) {
+	indentNo += 2
+	for t != nil {
+		for i := 0; i < indentNo; i++ {
+			fmt.Print(" ")
+		}
+		if t.node == stmtNode {
+			switch t.stmt {
+			case ifStmt:
+				fmt.Println("If")
+			case repeatStmt:
+				fmt.Println("Repeat")
+			case assignStmt:
+				fmt.Printf("Assign to: %s\n", t.attr)
+			case readStmt:
+				fmt.Println("Read: ", t.attr)
+			case writeStmt:
+				fmt.Println("Write")
+			}
+		} else if t.node == exprNode {
+			switch t.expr {
+			case opExpr:
+				fmt.Printf("Op: %s\n", t.op.String())
+			case constExpr:
+				fmt.Printf("Const: %d\n", t.val)
+			case idExpr:
+				fmt.Printf("Id: %s\n", t.attr)
+			}
+		} else {
+			fmt.Println("Unknown node kind")
+		}
+		for i := 0; i < 3; i++ {
+			PrintTree(t.child[i], indentNo)
+		}
+		t = t.sibling
+	}
+	indentNo -= 2
+}
