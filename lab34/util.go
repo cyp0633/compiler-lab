@@ -15,11 +15,10 @@ func OpenFile() {
 	}
 	sourceScanner = bufio.NewScanner(file)
 	// 打开输出文件 code.tm
-	file, err = os.Create("demo.tm")
+	file, err = os.OpenFile("demo.tm", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		_ = fmt.Errorf("failed to create file: %s", err.Error())
 		panic(err)
 	}
-
-	outputFile = bufio.NewWriter(file)
+	outputFile = file
 }
