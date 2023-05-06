@@ -29,6 +29,7 @@ func cGen(t *treeNode) {
 	case exprNode:
 		genExp(t)
 	}
+	cGen(t.sibling)
 }
 
 // 对一个语句节点，生成代码
