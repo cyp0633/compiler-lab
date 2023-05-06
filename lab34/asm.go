@@ -44,7 +44,7 @@ func emitRM(op string, target, offset, base int) {
 
 // 寄存器和内存的操作，但引用内存中的绝对地址
 func emitAbsRM(op string, target, loc int) {
-	fmt.Fprintf(outputFile, "%3d:  %5s  %d,%d(%d)\n", emitLoc, op, target, loc, 0)
+	fmt.Fprintf(outputFile, "%3d:  %5s  %d,%d(%d)\n", emitLoc, op, target, loc-(emitLoc+1), PROGRAM_COUNTER)
 	emitLoc++
 	if highEmitLoc < emitLoc {
 		highEmitLoc = emitLoc
