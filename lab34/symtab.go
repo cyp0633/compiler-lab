@@ -5,10 +5,10 @@ import "fmt"
 // symtab.go 符号表
 
 // 符号表
-var symtab map[string]struct {
+var symtab map[string]*struct {
 	refLines []int // 引用行号列表
 	memLoc   int   // 内存位置
-} = make(map[string]struct {
+} = make(map[string]*struct {
 	refLines []int
 	memLoc   int
 })
@@ -31,7 +31,7 @@ func insertSymtab(name string, lineNo int) {
 	if item, ok := symtab[name]; ok {
 		item.refLines = append(item.refLines, lineNo)
 	} else {
-		symtab[name] = struct {
+		symtab[name] = &struct {
 			refLines []int
 			memLoc   int
 		}{[]int{lineNo}, memLoc}
