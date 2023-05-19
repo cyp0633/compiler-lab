@@ -110,7 +110,7 @@ func genExp(t *treeNode) {
 		emitComment("op: push left")
 		cGen(t.child[1])
 		tmpOffset++
-		emitRM("LD", ACCUMULATOR2, 0, MEMORY_POINTER)
+		emitRM("LD", ACCUMULATOR2, tmpOffset, MEMORY_POINTER)
 		emitComment("op: load left")
 		switch t.op {
 		case plusToken:
